@@ -1,6 +1,6 @@
 import type { CognitoSignUpClient, RegisterUserInput, RegisterUserResult } from "./types.js";
 
-const EMAIL_PATTERN = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function validateRegisterInput(input: unknown): RegisterUserInput {
   if (!input || typeof input !== "object") throw new Error("Request body must be a JSON object.");
