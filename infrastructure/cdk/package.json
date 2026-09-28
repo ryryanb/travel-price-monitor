@@ -1,1 +1,21 @@
-{"name":"travel-price-monitor-cdk","private":true,"type":"module","scripts":{"synth":"cdk synth","deploy":"cdk deploy --require-approval never","synth:local":"cdklocal synth","deploy:local":"cdklocal deploy --require-approval never"},"dependencies":{"aws-cdk-lib":"^2.233.0","constructs":"^10.4.2"},"devDependencies":{"aws-cdk":"^2.233.0","cdklocal":"^2.2.1","esbuild":"^0.25.0","tsx":"^4.20.0","typescript":"^7.0.2"}}
+{
+  "name": "travel-price-monitor-cdk",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "synth": "cdk synth",
+    "deploy": "cdk deploy --require-approval never",
+    "synth:local": "lstk cdk synth",
+    "deploy:local": "lstk cdk deploy --require-approval never"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.233.0",
+    "constructs": "^10.4.2"
+  },
+  "devDependencies": {
+    "aws-cdk": "^2.233.0",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.20.0",
+    "typescript": "^7.0.2"
+  }
+}
