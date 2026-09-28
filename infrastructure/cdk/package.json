@@ -5,8 +5,8 @@
   "scripts": {
     "synth": "cdk synth",
     "deploy": "cdk deploy --require-approval never",
-    "synth:local": "lstk cdk synth",
-    "deploy:local": "lstk cdk deploy --require-approval never"
+    "synth:local": "cdklocal synth",
+    "deploy:local": "cdklocal deploy --require-approval never"
   },
   "dependencies": {
     "aws-cdk-lib": "^2.233.0",
