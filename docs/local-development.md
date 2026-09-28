@@ -4,7 +4,7 @@
 
 This document describes how to run the Travel Price Monitor development environment locally.
 
-The MVP uses AWS-managed services in production. During local development, Docker Compose runs LocalStack as an AWS service emulator so that AWS-dependent application code can be developed without requiring a deployed AWS environment.
+The MVP uses AWS-managed services in production. During local development, Docker Compose runs LocalStack 4.4.0 as an AWS service emulator so that AWS-dependent application code can be developed without requiring a deployed AWS environment.
 
 ## Prerequisites
 
@@ -55,6 +55,8 @@ The local AWS-compatible endpoint is:
 ```text
 http://localhost:4566
 ```
+
+The Compose configuration pins LocalStack to `4.4.0`. This is intentional: starting March 23, 2026, the `localstack/localstack:latest` image requires an authentication token. Version `4.4.0` is the final pre-authentication Community release and does not require a LocalStack account or auth token for this local-development setup.
 
 The configured local AWS region is:
 
@@ -107,7 +109,7 @@ The intended local configuration is:
 
 The application should keep endpoint configuration separate from production configuration so that deployed Lambdas use normal AWS service endpoints.
 
-No real AWS credentials should be required for the LocalStack environment.
+No real AWS credentials should be required for the LocalStack environment, and no `LOCALSTACK_AUTH_TOKEN` is required by the pinned LocalStack 4.4.0 image.
 
 ## Local service scope
 
@@ -163,6 +165,22 @@ Local development must not silently fall back to production AWS resources.
 Production AWS configuration belongs to deployment/infrastructure stories and should use AWS-managed configuration, IAM roles, and secrets rather than local developer credentials.
 
 ## Troubleshooting
+
+### LocalStack exits with code 55
+
+If LocalStack exits with code `55` and the logs mention license activation or `LOCALSTACK_AUTH_TOKEN`, verify that `docker-compose.yml` still uses:
+
+```yaml
+image: localstack/localstack:4.4.0
+```
+
+Do not change it to `localstack/localstack:latest` unless you intentionally want to use an authenticated LocalStack release.
+
+You can inspect the startup logs with:
+
+```bash
+docker logs travel-price-monitor-localstack
+```
 
 ### Docker is not running
 
