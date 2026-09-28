@@ -93,6 +93,44 @@ Implementation will be added to these areas through subsequent development stori
 * Node.js 22
 * npm
 
+### Local development
+
+The local development environment uses Docker Compose with LocalStack to emulate the AWS services used by the MVP. This allows AWS-dependent development to happen without connecting the application to a deployed AWS environment.
+
+Prerequisites:
+
+* Node.js 22
+* npm
+* Docker with Docker Compose
+
+Start the local AWS services:
+
+```bash
+npm run dev:infra
+```
+
+Check that the local infrastructure is running:
+
+```bash
+docker compose ps
+```
+
+Stop the local infrastructure:
+
+```bash
+npm run dev:infra:down
+```
+
+Follow LocalStack logs:
+
+```bash
+npm run dev:infra:logs
+```
+
+The LocalStack endpoint is `http://localhost:4566` and the local AWS region is `ap-southeast-1`.
+
+See [Local Development](docs/local-development.md) for configuration, environment variables, and the expected local workflow.
+
 ### TypeScript
 
 The project uses TypeScript with strict type checking enabled.
