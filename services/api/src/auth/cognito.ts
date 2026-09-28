@@ -24,10 +24,18 @@ export function createCognitoSignUpClient(region: string, clientId: string, endp
         throw error;
       }
       if (!payload.UserSub) throw new Error("Cognito did not return a user identifier.");
+
+      const codeDelivery = payload.CodeDeliveryDetails;
       return {
         userSub: payload.UserSub,
         userConfirmed: payload.UserConfirmed === true,
-        ...(payload.CodeDeliveryDetails ? { codeDelivery: { destination: payload.CodeDeliveryDetails.Destination, deliveryMedium: payload.CodeDeliveryDetails.DeliveryMedium, attributeName: payload.CodeDeliveryDetails.AttributeName } } : {}),
+        ...(codeDelivery ? {
+          codeDelivery: {
+            ...(codeDelivery.Destination ? { destination: codeDelivery.Destination } : {}),
+            ...(codeDelivery.DeliveryMedium ? { deliveryMedium: codeDelivery.DeliveryMedium } : {}),
+            ...(codeDelivery.AttributeName ? { attributeName: codeDelivery.AttributeName } : {}),
+          },
+        } : {}),
       };
     },
   };
