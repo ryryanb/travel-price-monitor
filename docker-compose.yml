@@ -5,7 +5,7 @@ services:
     ports:
       - "4566:4566"
     environment:
-      - SERVICES=dynamodb,s3,ses,cognito-idp,apigateway,lambda,eventbridge,sqs
+      - SERVICES=dynamodb,s3,ses,apigateway,lambda,eventbridge,sqs
       - AWS_DEFAULT_REGION=ap-southeast-1
       - DEBUG=0
     volumes:
