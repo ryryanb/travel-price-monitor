@@ -111,18 +111,17 @@ No real AWS credentials should be required for the LocalStack environment.
 
 ## Local service scope
 
-The initial LocalStack configuration provides emulated endpoints for the AWS services planned for the MVP:
+The initial LocalStack configuration provides local AWS-compatible endpoints for the infrastructure services needed during MVP development:
 
 - DynamoDB
 - S3
 - SES
-- Cognito
 - API Gateway
 - Lambda
 - EventBridge
 - SQS
 
-Not every service is required by the application immediately. Services can be reduced later if the MVP implementation establishes a smaller local dependency set.
+Authentication is kept as a local application concern during early development; the production Cognito integration is introduced with the authentication/infrastructure stories. Not every service is required by the application immediately. Services can be reduced later if the MVP implementation establishes a smaller local dependency set.
 
 ## TypeScript validation
 
