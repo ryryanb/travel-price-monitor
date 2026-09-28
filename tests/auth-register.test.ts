@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { registerUser, validateRegisterInput } from "../services/api/src/auth/register.js";
+import { registerUser, validateRegisterInput } from "../services/api/src/auth/register.ts";
 
 test("normalizes a valid registration input", () => {
   assert.deepEqual(validateRegisterInput({ email: " User@Example.COM ", password: "password1" }), { email: "user@example.com", password: "password1" });
