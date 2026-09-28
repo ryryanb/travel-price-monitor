@@ -1,0 +1,29 @@
+{
+  "name": "travel-price-monitor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A serverless travel price monitoring platform that tracks travel prices over time and sends alerts when monitored prices meet user-defined thresholds.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ryryanb/travel-price-monitor.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ryryanb/travel-price-monitor/issues"
+  },
+  "homepage": "https://github.com/ryryanb/travel-price-monitor#readme",
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}
