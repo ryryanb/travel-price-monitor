@@ -131,6 +131,24 @@ The LocalStack endpoint is `http://localhost:4566` and the local AWS region is `
 
 See [Local Development](docs/local-development.md) for configuration, environment variables, and the expected local workflow.
 
+### Automated testing
+
+The project uses Node.js 22's built-in test runner for the current test suite. This keeps the early project scaffold dependency-light while providing a standard automated test command. Application and SvelteKit-specific testing tools can be introduced when those components are implemented.
+
+Run the test suite once:
+
+```bash
+npm test
+```
+
+Run the test suite in watch mode during development:
+
+```bash
+npm run test:watch
+```
+
+Continuous integration runs type checking and automated tests for pushes and pull requests targeting `main`.
+
 ### TypeScript
 
 The project uses TypeScript with strict type checking enabled.
