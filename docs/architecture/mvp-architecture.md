@@ -142,6 +142,7 @@ Responsibilities:
 
 Representative endpoints:
 
+- `POST /auth/register`
 - `POST /monitors`
 - `GET /monitors`
 - `GET /monitors/{id}`
