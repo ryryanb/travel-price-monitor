@@ -62,18 +62,30 @@ Hotels, trains, activities, flexible-destination searches, multiple providers, a
 
 ## Repository Structure
 
-The repository will eventually contain:
+The project is organized into separate application, service, infrastructure, shared-code, documentation, and testing areas.
 
 ```text
 apps/
+└── web/                    # SvelteKit frontend
+
 services/
+└── api/                    # Backend/API services
+
 infrastructure/
+└── cdk/                    # AWS CDK infrastructure
+
 packages/
+└── shared/                 # Shared TypeScript types and utilities
+
 docs/
-tests/
+├── architecture/           # Architecture and design documentation
+└── README.md
+
+tests/                      # Cross-component and integration tests
 ```
 
-These directories will be introduced as their corresponding implementation stories are completed.
+Implementation will be added to these areas through subsequent development stories.
+
 
 ## License
 
