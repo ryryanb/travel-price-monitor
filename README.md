@@ -86,6 +86,24 @@ tests/                      # Cross-component and integration tests
 
 Implementation will be added to these areas through subsequent development stories.
 
+## Development
+
+### Prerequisites
+
+* Node.js 22
+* npm
+
+### TypeScript
+
+The project uses TypeScript with strict type checking enabled.
+
+Run the TypeScript compiler without emitting JavaScript:
+
+```bash
+npm run typecheck
+```
+
+The shared TypeScript configuration is defined in `tsconfig.base.json`. Individual applications and services will extend this configuration as they are introduced.
 
 ## License
 
