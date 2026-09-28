@@ -29,7 +29,7 @@
   "homepage": "https://github.com/ryryanb/travel-price-monitor#readme",
   "devDependencies": {
     "typescript": "^7.0.2",
-    "@types/node": "^22.0.0"
+    "@types/node": "^22.20.4"
   },
   "type": "module"
 }
