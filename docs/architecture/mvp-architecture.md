@@ -274,6 +274,19 @@ Browser
 
 The browser never reads DynamoDB directly.
 
+### 5.5 User Authentication
+
+```text
+Browser
+  -> API Gateway
+  -> API Lambda
+  -> Cognito USER_PASSWORD_AUTH
+  -> Cognito-issued tokens
+  -> Browser
+```
+
+The browser uses the returned access token for subsequent authenticated API requests. The API layer remains responsible for token validation and resource authorization.
+
 ### 5.4 Alert
 
 ```text
