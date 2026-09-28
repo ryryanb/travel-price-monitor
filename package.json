@@ -10,11 +10,11 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --experimental-specifier-resolution=node --test tests/**/*.test.ts",
+    "test": "node --experimental-strip-types --test tests/**/*.test.ts",
     "dev:infra": "docker compose up -d",
     "dev:infra:down": "docker compose down",
     "dev:infra:logs": "docker compose logs -f localstack",
-    "test:watch": "node --experimental-strip-types --experimental-specifier-resolution=node --test --watch tests/**/*.test.ts"
+    "test:watch": "node --experimental-strip-types --test --watch tests/**/*.test.ts"
   },
   "repository": {
     "type": "git",
