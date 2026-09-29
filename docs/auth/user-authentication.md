@@ -65,3 +65,13 @@ The client should keep the refresh token in a secure client-side session mechani
 ## Scope
 
 This story implements credential authentication, token issuance, and session refresh. Logout/revocation, confirmation, password reset, and authenticated monitor authorization are separate stories.
+
+## AUTH-003 acceptance gate
+
+AUTH-003 is accepted when both commands pass from the repository root:
+
+```bash
+npm run typecheck && npm test
+```
+
+The test suite includes unit tests for refresh-token validation and Cognito refresh behavior, plus handler-level tests covering successful refreshes, malformed or missing requests, invalid/expired refresh tokens, missing Cognito configuration, and unexpected Cognito failures. These tests use mocked Cognito HTTP responses and do not require an AWS deployment.
