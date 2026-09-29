@@ -81,7 +81,7 @@ export class AuthApiStack extends cdk.Stack {
     new cdk.CfnOutput(this, "UserPoolClientId", {
       value: userPoolClient.userPoolClientId,
     });
-    new cdk.CfnOutput(this, "ApiBaseUrl", { value: api.urlForPath("") });
+    new cdk.CfnOutput("ApiBaseUrl", { value: api.urlForPath("/") });
     new cdk.CfnOutput(this, "RegisterUrl", {
       value: api.urlForPath("/auth/register"),
     });
