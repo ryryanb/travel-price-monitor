@@ -37,6 +37,31 @@ Required: `COGNITO_USER_POOL_CLIENT_ID`; `COGNITO_REGION` defaults to `ap-southe
 
 Tokens are credentials and must not be logged.
 
+## Session persistence
+
+`POST /auth/refresh` accepts a Cognito refresh token and returns a new access token and ID token without requiring the user to enter their password again.
+
+### Request
+
+```json
+{"refreshToken":"cognito-refresh-token"}
+```
+
+### Success
+
+HTTP `200 OK` returns a refreshed access token, ID token, expiry, and token type. Cognito manages the refresh-token lifetime; the API does not issue or replace the refresh token.
+
+### Errors
+
+| Condition | HTTP status |
+|---|---:|
+| Missing/invalid JSON body | 400 |
+| Missing refresh token | 400 |
+| Invalid or expired refresh token | 401 |
+| Unexpected Cognito failure | 502 |
+
+The client should keep the refresh token in a secure client-side session mechanism and use it only to obtain new short-lived tokens. Tokens must never be logged or exposed in URLs.
+
 ## Scope
 
-This story implements credential authentication and token issuance. Refresh/revocation, logout, confirmation, password reset, and authenticated monitor authorization are separate stories.
+This story implements credential authentication, token issuance, and session refresh. Logout/revocation, confirmation, password reset, and authenticated monitor authorization are separate stories.
