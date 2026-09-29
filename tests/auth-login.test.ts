@@ -19,3 +19,25 @@ test("delegates valid credentials to Cognito", async () => {
   assert.equal(result.accessToken, "access-token");
   assert.equal(result.expiresIn, 3600);
 });
+
+
+test("refreshes a session through Cognito", async () => {
+  const { createCognitoRefreshClient } = await import("../services/api/src/auth/cognito.ts");
+  let requestBody = "";
+  const client = createCognitoRefreshClient("ap-southeast-1", "client-id", "", async (_input, init) => {
+    requestBody = String(init?.body ?? "");
+    return new Response(JSON.stringify({
+      AuthenticationResult: {
+        AccessToken: "new-access-token",
+        IdToken: "new-id-token",
+        ExpiresIn: 3600,
+        TokenType: "Bearer",
+      },
+    }), { status: 200, headers: { "content-type": "application/json" } });
+  });
+  const result = await client.refresh({ refreshToken: "refresh-token" });
+  assert.equal(result.accessToken, "new-access-token");
+  assert.equal(result.idToken, "new-id-token");
+  assert.match(requestBody, /REFRESH_TOKEN/);
+  assert.match(requestBody, /refresh-token/);
+});
