@@ -29,40 +29,64 @@ export class AuthApiStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_22_X,
       timeout: cdk.Duration.seconds(15),
       memorySize: 256,
-      environment: { COGNITO_USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId, COGNITO_REGION: cdk.Stack.of(this).region },
-      bundling: { target: "node22", format: nodejs.OutputFormat.ESM, minify: false, sourceMap: true },
+      environment: {
+        COGNITO_USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
+        COGNITO_REGION: cdk.Stack.of(this).region,
+      },
+      bundling: {
+        target: "node22",
+        format: nodejs.OutputFormat.ESM,
+        minify: false,
+        sourceMap: true,
+      },
     };
+
     const currentFile = fileURLToPath(import.meta.url);
-const currentDirectory = path.dirname(currentFile);
-const repositoryRoot = path.resolve(currentDirectory, "../..");
+    const currentDirectory = path.dirname(currentFile);
+    const repositoryRoot = path.resolve(currentDirectory, "../..");
 
-const registerLambda = new nodejs.NodejsFunction(this, "RegisterLambda", {
-  ...common,
-  entry: path.join(
-    repositoryRoot,
-    "services/api/src/handlers/auth/register.ts",
-  ),
-  projectRoot: repositoryRoot,
-  functionName: "travel-price-monitor-auth-register",
-});
+    const registerLambda = new nodejs.NodejsFunction(this, "RegisterLambda", {
+      ...common,
+      entry: path.join(
+        repositoryRoot,
+        "services/api/src/handlers/auth/register.ts",
+      ),
+      projectRoot: repositoryRoot,
+      functionName: "travel-price-monitor-auth-register",
+    });
 
-const loginLambda = new nodejs.NodejsFunction(this, "LoginLambda", {
-  ...common,
-  entry: path.join(
-    repositoryRoot,
-    "services/api/src/handlers/auth/login.ts",
-  ),
-  projectRoot: repositoryRoot,
-  functionName: "travel-price-monitor-auth-login",
-});
-const api = new apigateway.RestApi(this, "Api", { restApiName: "travel-price-monitor-api", deployOptions: { stageName: "v1" } });
+    const loginLambda = new nodejs.NodejsFunction(this, "LoginLambda", {
+      ...common,
+      entry: path.join(
+        repositoryRoot,
+        "services/api/src/handlers/auth/login.ts",
+      ),
+      projectRoot: repositoryRoot,
+      functionName: "travel-price-monitor-auth-login",
+    });
+
+    const api = new apigateway.RestApi(this, "Api", {
+      restApiName: "travel-price-monitor-api",
+      deployOptions: { stageName: "v1" },
+    });
     const auth = api.root.addResource("auth");
-    auth.addResource("register").addMethod("POST", new apigateway.LambdaIntegration(registerLambda));
-    auth.addResource("login").addMethod("POST", new apigateway.LambdaIntegration(loginLambda));
+    auth
+      .addResource("register")
+      .addMethod("POST", new apigateway.LambdaIntegration(registerLambda));
+    auth
+      .addResource("login")
+      .addMethod("POST", new apigateway.LambdaIntegration(loginLambda));
+
     new cdk.CfnOutput(this, "UserPoolId", { value: userPool.userPoolId });
-    new cdk.CfnOutput(this, "UserPoolClientId", { value: userPoolClient.userPoolClientId });
-    new cdk.CfnOutput(this, "ApiBaseUrl", { value: api.urlForPath("/v1") });
-    new cdk.CfnOutput(this, "RegisterUrl", { value: api.urlForPath("/v1/auth/register") });
-    new cdk.CfnOutput(this, "LoginUrl", { value: api.urlForPath("/v1/auth/login") });
+    new cdk.CfnOutput(this, "UserPoolClientId", {
+      value: userPoolClient.userPoolClientId,
+    });
+    new cdk.CfnOutput(this, "ApiBaseUrl", { value: api.urlForPath("") });
+    new cdk.CfnOutput(this, "RegisterUrl", {
+      value: api.urlForPath("/auth/register"),
+    });
+    new cdk.CfnOutput(this, "LoginUrl", {
+      value: api.urlForPath("/auth/login"),
+    });
   }
 }
