@@ -41,3 +41,18 @@ export interface ApiGatewayResponse {
   headers: Record<string, string>;
   body: string;
 }
+
+export interface RefreshUserInput {
+  refreshToken: string;
+}
+
+export interface RefreshUserResult {
+  accessToken: string;
+  idToken: string;
+  expiresIn: number;
+  tokenType: string;
+}
+
+export interface CognitoRefreshClient {
+  refresh(input: RefreshUserInput): Promise<RefreshUserResult>;
+}
