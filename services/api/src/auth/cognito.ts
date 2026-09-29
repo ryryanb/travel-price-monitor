@@ -81,3 +81,28 @@ export function createCognitoAuthClient(region: string, clientId: string, endpoi
     },
   };
 }
+
+
+export function createCognitoRefreshClient(region: string, clientId: string, endpointUrl = "", fetcher: typeof fetch = fetch): CognitoRefreshClient {
+  return {
+    async refresh(input) {
+      const endpoint = endpointUrl || `https://cognito-idp.${region}.amazonaws.com/`;
+      const response = await fetcher(endpoint, {
+        method: "POST",
+        headers: { "content-type": "application/x-amz-json-1.1", "x-amz-target": "AWSCognitoIdentityProviderService.InitiateAuth" },
+        body: JSON.stringify({
+          AuthFlow: "REFRESH_TOKEN_AUTH",
+          ClientId: clientId,
+          AuthParameters: { REFRESH_TOKEN: input.refreshToken },
+        }),
+      });
+      const payload = (await response.json()) as CognitoResponse;
+      if (!response.ok) throw cognitoError(payload, "Unable to refresh user session.");
+      const result = payload.AuthenticationResult;
+      if (!result?.AccessToken || !result.IdToken || result.ExpiresIn === undefined || !result.TokenType) {
+        throw new Error("Cognito did not return a complete refreshed authentication result.");
+      }
+      return { accessToken: result.AccessToken, idToken: result.IdToken, expiresIn: result.ExpiresIn, tokenType: result.TokenType };
+    },
+  };
+}
