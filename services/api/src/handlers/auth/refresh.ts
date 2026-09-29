@@ -1,6 +1,6 @@
-import { createCognitoRefreshClient } from "../../auth/cognito.js";
-import { refreshUserSession } from "../../auth/refresh.js";
-import type { ApiGatewayRequest, ApiGatewayResponse } from "../../auth/types.js";
+import { createCognitoRefreshClient } from "../../auth/cognito.ts";
+import { refreshUserSession } from "../../auth/refresh.ts";
+import type { ApiGatewayRequest, ApiGatewayResponse } from "../../auth/types.ts";
 
 const headers = { "content-type": "application/json" };
 const environment = (globalThis as typeof globalThis & { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
