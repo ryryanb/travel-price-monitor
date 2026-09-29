@@ -1,4 +1,4 @@
-import type { CognitoAuthClient, CognitoSignUpClient } from "./types.js";
+import type { CognitoAuthClient, CognitoRefreshClient, CognitoSignUpClient } from "./types.js";
 
 interface CognitoResponse {
   UserSub?: string;
