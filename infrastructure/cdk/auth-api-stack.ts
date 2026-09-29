@@ -65,6 +65,16 @@ export class AuthApiStack extends cdk.Stack {
       functionName: "travel-price-monitor-auth-login",
     });
 
+    const refreshLambda = new nodejs.NodejsFunction(this, "RefreshLambda", {
+      ...common,
+      entry: path.join(
+        repositoryRoot,
+        "services/api/src/handlers/auth/refresh.ts",
+      ),
+      projectRoot: repositoryRoot,
+      functionName: "travel-price-monitor-auth-refresh",
+    });
+
     const api = new apigateway.RestApi(this, "Api", {
       restApiName: "travel-price-monitor-api",
       deployOptions: { stageName: "v1" },
@@ -76,6 +86,9 @@ export class AuthApiStack extends cdk.Stack {
     auth
       .addResource("login")
       .addMethod("POST", new apigateway.LambdaIntegration(loginLambda));
+    auth
+      .addResource("refresh")
+      .addMethod("POST", new apigateway.LambdaIntegration(refreshLambda));
 
     new cdk.CfnOutput(this, "UserPoolId", { value: userPool.userPoolId });
     new cdk.CfnOutput(this, "UserPoolClientId", {
@@ -87,6 +100,9 @@ export class AuthApiStack extends cdk.Stack {
     });
     new cdk.CfnOutput(this, "LoginUrl", {
       value: api.urlForPath("/auth/login"),
+    });
+    new cdk.CfnOutput(this, "RefreshUrl", {
+      value: api.urlForPath("/auth/refresh"),
     });
   }
 }
