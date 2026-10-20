@@ -68,7 +68,7 @@ This opt-in test provisions a temporary DynamoDB table in LocalStack, invokes th
 3. Run the integration test:
 
    ```bash
-   RUN_LOCALSTACK_INTEGRATION=1 DYNAMODB_ENDPOINT_URL=http://localhost:4566 AWS_REGION=ap-southeast-1 node --experimental-strip-types --test tests/monitor-localstack.integration.test.ts
+   npm run test:localstack
    ```
 
 4. Re-run the ordinary checks:
