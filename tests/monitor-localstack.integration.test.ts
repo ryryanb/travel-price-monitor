@@ -53,7 +53,10 @@ test("creates a monitor and persists it to LocalStack DynamoDB", { skip: !enable
       ],
       BillingMode: "PAY_PER_REQUEST",
     }));
-    await waitUntilTableExists({ client, maxWaitTime: 20 }, { TableName: tableName });
+    await waitUntilTableExists(
+      { client, maxWaitTime: 20, minDelay: 1, maxDelay: 2 },
+      { TableName: tableName },
+    );
 
     const departureDate = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
     const response = await handler({
