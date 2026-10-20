@@ -4,11 +4,7 @@
 
 `POST /monitors` (API Gateway stage prefix applies, e.g. `/v1/monitors`).
 
-The endpoint requires a valid Cognito User Pool access token. Send it as:
-
-`Authorization: Bearer <access-token>`
-
-The API Gateway Cognito authorizer validates the token. The owner ID is taken from the verified `sub` claim; clients cannot choose another user's owner ID.
+The endpoint requires a valid Cognito User Pool token sent as `Authorization: Bearer <token>`. API Gateway validates the token, and the owner ID is taken from the verified `sub` claim; clients cannot choose another user's owner ID.
 
 ## Request
 
@@ -29,22 +25,20 @@ The API Gateway Cognito authorizer validates the token. The owner ID is taken fr
 - `targetPrice`: required positive finite number, up to 10,000,000; stored to two decimal places.
 - `currency`: optional three-letter currency code, defaults to `USD`, normalized to uppercase.
 
-## Success
+## Success and errors
 
-Returns `201 Created` with the saved monitor, including generated `monitorId`, authenticated `userId`, `ACTIVE` status, and creation/update timestamps.
-
-## Errors
+A successful request returns `201 Created` with the saved monitor, including generated `monitorId`, authenticated `userId`, `ACTIVE` status, and timestamps.
 
 - `400`: missing/malformed JSON or invalid trip criteria.
-- `401`: missing authenticated subject (normally the API Gateway authorizer rejects invalid tokens before invoking Lambda).
+- `401`: missing authenticated subject (normally rejected by API Gateway first).
 - `500`: monitor table configuration missing.
 - `502`: persistence failure.
 
-## Storage and behavior
+## Storage
 
-The monitor is stored in DynamoDB using `PK=USER#<userId>` and `SK=MONITOR#<monitorId>`, with a conditional put to prevent accidental overwrite. The table uses on-demand billing. Creating a monitor does not yet execute a flight search or schedule price checks; those are separate stories.
+The monitor is stored in DynamoDB using `PK=USER#<userId>` and `SK=MONITOR#<monitorId>`, with a conditional put to prevent accidental overwrite. The table uses on-demand billing. Creating a monitor does not yet execute a flight search or schedule price checks.
 
-## Local acceptance gate
+## Automated tests
 
 Run from the repository root:
 
@@ -52,4 +46,35 @@ Run from the repository root:
 npm run typecheck && npm test
 ```
 
-The monitor service and handler tests use an in-memory repository, so they do not require deployed AWS resources.
+The ordinary monitor service and handler tests use an in-memory repository and do not require AWS resources.
+
+## LocalStack DynamoDB integration test
+
+This opt-in test provisions a temporary DynamoDB table in LocalStack, invokes the real monitor handler, checks the `201` response and reads the saved record back from DynamoDB. It deletes its temporary table at the end. It does not deploy to AWS or call API Gateway.
+
+1. Start LocalStack and wait for the `Ready.` message:
+
+   ```bash
+   docker compose up -d
+   curl http://localhost:4566/_localstack/health
+   ```
+
+2. Install dependencies after pulling the changes so npm updates the lockfile:
+
+   ```bash
+   npm install
+   ```
+
+3. Run the integration test:
+
+   ```bash
+   RUN_LOCALSTACK_INTEGRATION=1 DYNAMODB_ENDPOINT_URL=http://localhost:4566 AWS_REGION=ap-southeast-1 node --experimental-strip-types --test tests/monitor-localstack.integration.test.ts
+   ```
+
+4. Re-run the ordinary checks:
+
+   ```bash
+   npm run typecheck && npm test
+   ```
+
+Without `RUN_LOCALSTACK_INTEGRATION=1`, the integration test is skipped during the normal test suite. Dummy local credentials are used only to sign requests to LocalStack; do not put AWS credentials in this test.
