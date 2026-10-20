@@ -12,7 +12,7 @@ interface MonitorRequest {
   };
 }
 
-type RepositoryFactory = (tableName: string) => MonitorRepository;
+type RepositoryFactory = (tableName: string) => MonitorRepository | Promise<MonitorRepository>;
 const headers = { "content-type": "application/json" };
 const env = process.env;
 
@@ -43,7 +43,7 @@ export async function handleCreateMonitor(
     const tableName = env.MONITORS_TABLE_NAME;
     if (!tableName) return response(500, { message: "Monitor storage is not configured." });
 
-    const monitor = await createPriceMonitor(input, userId, repositoryFactory(tableName));
+    const monitor = await createPriceMonitor(input, userId, await repositoryFactory(tableName));
     return response(201, monitor);
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
