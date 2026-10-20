@@ -44,7 +44,7 @@ export async function handleCreateMonitor(
     if (!tableName) return response(500, { message: "Monitor storage is not configured." });
 
     const monitor = await createPriceMonitor(input, userId, await repositoryFactory(tableName));
-    return response(201, monitor);
+    return response(201, monitor as unknown as Record<string, unknown>);
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     if (
