@@ -1,6 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as nodejs from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
@@ -24,6 +25,14 @@ export class AuthApiStack extends cdk.Stack {
       preventUserExistenceErrors: true,
       generateSecret: false,
       refreshTokenValidity: cdk.Duration.days(30),
+    });
+    const monitorsTable = new dynamodb.Table(this, "MonitorsTable", {
+      tableName: "travel-price-monitor-monitors",
+      partitionKey: { name: "PK", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "SK", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      pointInTimeRecovery: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
     const common = {
       runtime: lambda.Runtime.NODEJS_22_X,
@@ -75,10 +84,31 @@ export class AuthApiStack extends cdk.Stack {
       functionName: "travel-price-monitor-auth-refresh",
     });
 
+    const createMonitorLambda = new nodejs.NodejsFunction(this, "CreateMonitorLambda", {
+      runtime: lambda.Runtime.NODEJS_22_X,
+      timeout: cdk.Duration.seconds(15),
+      memorySize: 256,
+      entry: path.join(repositoryRoot, "services/api/src/handlers/monitors/create.ts"),
+      projectRoot: repositoryRoot,
+      functionName: "travel-price-monitor-create-monitor",
+      environment: {
+        MONITORS_TABLE_NAME: monitorsTable.tableName,
+      },
+      bundling: {
+        target: "node22",
+        format: nodejs.OutputFormat.ESM,
+        minify: false,
+        sourceMap: true,
+        externalModules: ["@aws-sdk/*"],
+      },
+    });
+    monitorsTable.grantWriteData(createMonitorLambda);
+
     const api = new apigateway.RestApi(this, "Api", {
       restApiName: "travel-price-monitor-api",
       deployOptions: { stageName: "v1" },
     });
+    const authorizer = new apigateway.CognitoUserPoolsAuthorizer(this, "ApiAuthorizer", { cognitoUserPools: [userPool] });
     const auth = api.root.addResource("auth");
     auth
       .addResource("register")
