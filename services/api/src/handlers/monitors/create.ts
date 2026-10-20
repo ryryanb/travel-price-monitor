@@ -1,5 +1,5 @@
 import { createPriceMonitor } from "../../monitors/create.ts";
-import { createDynamoDbMonitorRepository } from "../../monitors/dynamodb-repository.ts";
+import type { MonitorRepository } from "../../monitors/types.ts";
 import type { ApiGatewayResponse } from "../../auth/types.ts";
 
 interface MonitorRequest {
@@ -12,10 +12,21 @@ interface MonitorRequest {
   };
 }
 
+type RepositoryFactory = (tableName: string) => MonitorRepository;
 const headers = { "content-type": "application/json" };
 const env = process.env;
 
 export async function handler(event: MonitorRequest): Promise<ApiGatewayResponse> {
+  return handleCreateMonitor(event, async (tableName) => {
+    const { createDynamoDbMonitorRepository } = await import("../../monitors/dynamodb-repository.ts");
+    return createDynamoDbMonitorRepository(tableName);
+  });
+}
+
+export async function handleCreateMonitor(
+  event: MonitorRequest,
+  repositoryFactory: RepositoryFactory,
+): Promise<ApiGatewayResponse> {
   try {
     if (!event.body) return response(400, { message: "Request body is required." });
     let input: unknown;
@@ -32,7 +43,7 @@ export async function handler(event: MonitorRequest): Promise<ApiGatewayResponse
     const tableName = env.MONITORS_TABLE_NAME;
     if (!tableName) return response(500, { message: "Monitor storage is not configured." });
 
-    const monitor = await createPriceMonitor(input, userId, createDynamoDbMonitorRepository(tableName));
+    const monitor = await createPriceMonitor(input, userId, repositoryFactory(tableName));
     return response(201, monitor);
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
