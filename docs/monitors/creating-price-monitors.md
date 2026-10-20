@@ -4,7 +4,7 @@
 
 `POST /monitors` (API Gateway stage prefix applies, e.g. `/v1/monitors`).
 
-The endpoint requires a valid Cognito User Pool token sent as `Authorization: Bearer <token>`. API Gateway validates the token, and the owner ID is taken from the verified `sub` claim; clients cannot choose another user's owner ID.
+The endpoint requires a valid Cognito User Pool ID token sent as `Authorization: <id-token>`. API Gateway validates the token. API Gateway validates the token, and the owner ID is taken from the verified `sub` claim; clients cannot choose another user's owner ID.
 
 ## Request
 
