@@ -26,15 +26,17 @@ test("creates a monitor and persists it to LocalStack DynamoDB", { skip: !enable
   process.env.MONITORS_TABLE_NAME = tableName;
   process.env.DYNAMODB_ENDPOINT_URL = endpoint;
   process.env.AWS_REGION = region;
-  process.env.AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID ?? "test";
-  process.env.AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY ?? "test";
+  const accessKeyId = process.env.AWS_ACCESS_KEY_ID ?? "test";
+  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY ?? "test";
+  process.env.AWS_ACCESS_KEY_ID = accessKeyId;
+  process.env.AWS_SECRET_ACCESS_KEY = secretAccessKey;
 
   const client = new DynamoDBClient({
     endpoint,
     region,
     credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      accessKeyId,
+      secretAccessKey,
     },
   });
 
