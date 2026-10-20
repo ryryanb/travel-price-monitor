@@ -99,7 +99,6 @@ export class AuthApiStack extends cdk.Stack {
         format: nodejs.OutputFormat.ESM,
         minify: false,
         sourceMap: true,
-        externalModules: ["@aws-sdk/*"],
       },
     });
     monitorsTable.grantWriteData(createMonitorLambda);
@@ -120,6 +119,15 @@ export class AuthApiStack extends cdk.Stack {
       .addResource("refresh")
       .addMethod("POST", new apigateway.LambdaIntegration(refreshLambda));
 
+    api.root.addResource("monitors").addMethod(
+      "POST",
+      new apigateway.LambdaIntegration(createMonitorLambda),
+      {
+        authorizer,
+        authorizationType: apigateway.AuthorizationType.COGNITO_USER_POOLS,
+      },
+    );
+
     new cdk.CfnOutput(this, "UserPoolId", { value: userPool.userPoolId });
     new cdk.CfnOutput(this, "UserPoolClientId", {
       value: userPoolClient.userPoolClientId,
@@ -133,6 +141,12 @@ export class AuthApiStack extends cdk.Stack {
     });
     new cdk.CfnOutput(this, "RefreshUrl", {
       value: api.urlForPath("/auth/refresh"),
+    });
+    new cdk.CfnOutput(this, "CreateMonitorUrl", {
+      value: api.urlForPath("/monitors"),
+    });
+    new cdk.CfnOutput(this, "MonitorsTableName", {
+      value: monitorsTable.tableName,
     });
   }
 }
