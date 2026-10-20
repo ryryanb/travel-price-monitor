@@ -1,23 +1,33 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import type { MonitorRepository, PriceMonitor } from "./types.ts";
 
-const region = process.env.AWS_REGION || "ap-southeast-1";
-const client = DynamoDBDocumentClient.from(new DynamoDBClient({
-  region,
+const client = new DynamoDBClient({
+  region: process.env.AWS_REGION || "ap-southeast-1",
   ...(process.env.DYNAMODB_ENDPOINT_URL ? { endpoint: process.env.DYNAMODB_ENDPOINT_URL } : {}),
-}));
+});
+
+function stringValue(value: string) { return { S: value }; }
 
 export function createDynamoDbMonitorRepository(tableName: string): MonitorRepository {
   return {
     async create(monitor: PriceMonitor): Promise<void> {
-      await client.send(new PutCommand({
+      await client.send(new PutItemCommand({
         TableName: tableName,
         Item: {
-          ...monitor,
-          PK: `USER#${monitor.userId}`,
-          SK: `MONITOR#${monitor.monitorId}`,
-          entityType: "PRICE_MONITOR",
+          PK: stringValue(`USER#${monitor.userId}`),
+          SK: stringValue(`MONITOR#${monitor.monitorId}`),
+          entityType: stringValue("PRICE_MONITOR"),
+          monitorId: stringValue(monitor.monitorId),
+          userId: stringValue(monitor.userId),
+          origin: stringValue(monitor.origin),
+          destination: stringValue(monitor.destination),
+          departureDate: stringValue(monitor.departureDate),
+          ...(monitor.returnDate ? { returnDate: stringValue(monitor.returnDate) } : {}),
+          targetPrice: { N: String(monitor.targetPrice) },
+          currency: stringValue(monitor.currency),
+          status: stringValue(monitor.status),
+          createdAt: stringValue(monitor.createdAt),
+          updatedAt: stringValue(monitor.updatedAt),
         },
         ConditionExpression: "attribute_not_exists(PK) AND attribute_not_exists(SK)",
       }));
