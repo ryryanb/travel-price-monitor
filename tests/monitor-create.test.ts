@@ -15,8 +15,18 @@ test("rejects identical airports", () => {
   assert.throws(() => validateCreateMonitorInput({ ...validInput, destination: "MNL" }), /must be different/);
 });
 
-test("rejects invalid airport codes", () => {
-  assert.throws(() => validateCreateMonitorInput({ ...validInput, origin: "Manila" }), /three-letter IATA/);
+test("requires an origin airport code", () => {
+  for (const origin of [undefined, null, "", "   ", "Manila", "MN", "MNL1", 123]) {
+    assert.throws(() => validateCreateMonitorInput({ ...validInput, origin }), /Origin must be a three-letter IATA airport code/);
+  }
+});
+
+test("normalizes origin input by trimming whitespace and uppercasing", () => {
+  assert.equal(validateCreateMonitorInput({ ...validInput, origin: "  ceb " }).origin, "CEB");
+});
+
+test("rejects invalid destination airport codes", () => {
+  assert.throws(() => validateCreateMonitorInput({ ...validInput, destination: "Tokyo" }), /Destination must be a three-letter IATA airport code/);
 });
 
 test("rejects past and impossible departure dates", () => {
