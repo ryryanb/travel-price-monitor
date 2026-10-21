@@ -35,11 +35,19 @@ export class SerpApiTravelPriceProvider implements TravelPriceProvider {
   readonly id = "serpapi";
   readonly name = "SerpApi Google Flights";
 
+  private readonly config: SerpApiProviderConfig;
+  private readonly fetchImpl: SerpApiFetch;
+  private readonly now: () => Date;
+
   constructor(
-    private readonly config: SerpApiProviderConfig,
-    private readonly fetchImpl: SerpApiFetch = (url) => fetch(url),
-    private readonly now: () => Date = () => new Date(),
-  ) {}
+    config: SerpApiProviderConfig,
+    fetchImpl: SerpApiFetch = (url) => fetch(url),
+    now: () => Date = () => new Date(),
+  ) {
+    this.config = config;
+    this.fetchImpl = fetchImpl;
+    this.now = now;
+  }
 
   async search(criteria: TravelSearchCriteria): Promise<PriceResult[]> {
     const url = new URL(this.config.baseUrl);
