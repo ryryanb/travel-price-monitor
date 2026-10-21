@@ -5,6 +5,14 @@ const AIRPORT_CODE = /^[A-Z]{3}$/;
 const CURRENCY_CODE = /^[A-Z]{3}$/;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
+function normalizeAirportCode(value: unknown, fieldName: "Origin" | "Destination"): string {
+  const code = typeof value === "string" ? value.trim().toUpperCase() : "";
+  if (!AIRPORT_CODE.test(code)) {
+    throw new Error(`${fieldName} must be a three-letter IATA airport code.`);
+  }
+  return code;
+}
+
 function isRealDate(value: string): boolean {
   if (!ISO_DATE.test(value)) return false;
   const date = new Date(`${value}T00:00:00.000Z`);
