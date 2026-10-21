@@ -2,33 +2,27 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { loadTravelProviderConfig } from "../services/api/src/providers/config.ts";
 
-const credentials = {
-  AMADEUS_CLIENT_ID: "test-client-id",
-  AMADEUS_CLIENT_SECRET: "test-client-secret",
-};
+const credentials = { SERPAPI_API_KEY: "test-serpapi-key" };
 
-test("defaults to Amadeus test API and loads credentials", () => {
+test("defaults to SerpApi Google Flights endpoint", () => {
   assert.deepEqual(loadTravelProviderConfig(credentials), {
-    provider: "amadeus",
-    clientId: "test-client-id",
-    clientSecret: "test-client-secret",
-    baseUrl: "https://test.api.amadeus.com",
+    provider: "serpapi",
+    apiKey: "test-serpapi-key",
+    baseUrl: "https://serpapi.com/search.json",
   });
 });
 
-test("normalizes provider name, trims credentials, and removes trailing slashes", () => {
+test("normalizes provider name, trims API key, and removes trailing slashes", () => {
   const config = loadTravelProviderConfig({
     ...credentials,
-    TRAVEL_PROVIDER: " AMADEUS ",
-    AMADEUS_CLIENT_ID: " id ",
-    AMADEUS_CLIENT_SECRET: " secret ",
-    AMADEUS_BASE_URL: "https://api.amadeus.com///",
+    TRAVEL_PROVIDER: " SERPAPI ",
+    SERPAPI_API_KEY: " test-key ",
+    SERPAPI_BASE_URL: "https://serpapi.com/search.json///",
   });
 
-  assert.equal(config.provider, "amadeus");
-  assert.equal(config.clientId, "id");
-  assert.equal(config.clientSecret, "secret");
-  assert.equal(config.baseUrl, "https://api.amadeus.com");
+  assert.equal(config.provider, "serpapi");
+  assert.equal(config.apiKey, "test-key");
+  assert.equal(config.baseUrl, "https://serpapi.com/search.json");
 });
 
 test("rejects unsupported provider names", () => {
@@ -38,24 +32,20 @@ test("rejects unsupported provider names", () => {
   );
 });
 
-test("requires client ID and client secret", () => {
+test("requires the SerpApi API key", () => {
   assert.throws(
-    () => loadTravelProviderConfig({ AMADEUS_CLIENT_SECRET: "secret" }),
-    /AMADEUS_CLIENT_ID is required/,
-  );
-  assert.throws(
-    () => loadTravelProviderConfig({ AMADEUS_CLIENT_ID: "id" }),
-    /AMADEUS_CLIENT_SECRET is required/,
+    () => loadTravelProviderConfig({ TRAVEL_PROVIDER: "serpapi" }),
+    /SERPAPI_API_KEY is required/,
   );
 });
 
 test("rejects malformed and non-HTTPS base URLs", () => {
   assert.throws(
-    () => loadTravelProviderConfig({ ...credentials, AMADEUS_BASE_URL: "not-a-url" }),
-    /AMADEUS_BASE_URL must be a valid HTTPS URL/,
+    () => loadTravelProviderConfig({ ...credentials, SERPAPI_BASE_URL: "not-a-url" }),
+    /SERPAPI_BASE_URL must be a valid HTTPS URL/,
   );
   assert.throws(
-    () => loadTravelProviderConfig({ ...credentials, AMADEUS_BASE_URL: "http://localhost:3000" }),
-    /AMADEUS_BASE_URL must use HTTPS/,
+    () => loadTravelProviderConfig({ ...credentials, SERPAPI_BASE_URL: "http://localhost:3000" }),
+    /SERPAPI_BASE_URL must use HTTPS/,
   );
 });
