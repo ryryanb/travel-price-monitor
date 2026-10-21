@@ -10,7 +10,9 @@ import test from "node:test";
 import { handler as createHandler } from "../services/api/src/handlers/monitors/create.ts";
 import { handler as getHandler } from "../services/api/src/handlers/monitors/get.ts";
 
-test("creates and retrieves a monitor through LocalStack DynamoDB", async () => {
+const enabled = process.env.RUN_LOCALSTACK_INTEGRATION === "1";
+
+test("creates and retrieves a monitor through LocalStack DynamoDB", { skip: !enabled }, async () => {
   const endpoint = process.env.DYNAMODB_ENDPOINT_URL ?? "http://localhost:4566";
   const region = process.env.AWS_REGION ?? "ap-southeast-1";
   const tableName = `monitors-view-it-${Date.now()}`;
