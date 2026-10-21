@@ -13,6 +13,8 @@ export interface TravelSearchCriteria {
   departureDate: string;
   /** Optional return date in YYYY-MM-DD format; omitted for one-way trips. */
   returnDate?: string;
+  /** Number of adult passengers; defaults to one when omitted. */
+  passengerCount?: number;
   /** Three-letter ISO 4217 currency code requested for prices. */
   currency: string;
 }
@@ -25,9 +27,9 @@ export interface TravelSearchCriteria {
  * in the stated currency.
  */
 export interface PriceResult {
-  /** Stable identifier for the provider adapter, e.g. "example-flights". */
+  /** Stable identifier for the provider adapter, e.g. "serpapi". */
   providerId: string;
-  /** Human-readable provider name. */
+  /** Human-readable provider name for logs and displayed results. */
   providerName: string;
   /** Provider-specific offer identifier, when available. */
   offerId?: string;
