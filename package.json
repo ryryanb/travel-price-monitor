@@ -15,7 +15,7 @@
     "dev:infra:down": "docker compose down",
     "dev:infra:logs": "docker compose logs -f localstack",
     "test:watch": "node --experimental-strip-types --test --watch tests/**/*.test.ts",
-    "test:localstack": "RUN_LOCALSTACK_INTEGRATION=1 DYNAMODB_ENDPOINT_URL=http://localhost:4566 AWS_REGION=ap-southeast-1 node --experimental-strip-types --test tests/monitor-localstack.integration.test.ts"
+    "test:localstack": "RUN_LOCALSTACK_INTEGRATION=1 DYNAMODB_ENDPOINT_URL=http://localhost:4566 AWS_REGION=ap-southeast-1 node --experimental-strip-types --test tests/*localstack.integration.test.ts"
   },
   "repository": {
     "type": "git",
