@@ -103,6 +103,25 @@ export class AuthApiStack extends cdk.Stack {
     });
     monitorsTable.grantWriteData(createMonitorLambda);
 
+    const getMonitorLambda = new nodejs.NodejsFunction(this, "GetMonitorLambda", {
+      runtime: lambda.Runtime.NODEJS_22_X,
+      timeout: cdk.Duration.seconds(15),
+      memorySize: 256,
+      entry: path.join(repositoryRoot, "services/api/src/handlers/monitors/get.ts"),
+      projectRoot: repositoryRoot,
+      functionName: "travel-price-monitor-get-monitor",
+      environment: {
+        MONITORS_TABLE_NAME: monitorsTable.tableName,
+      },
+      bundling: {
+        target: "node22",
+        format: nodejs.OutputFormat.ESM,
+        minify: false,
+        sourceMap: true,
+      },
+    });
+    monitorsTable.grantReadData(getMonitorLambda);
+
     const api = new apigateway.RestApi(this, "Api", {
       restApiName: "travel-price-monitor-api",
       deployOptions: { stageName: "v1" },
@@ -119,9 +138,18 @@ export class AuthApiStack extends cdk.Stack {
       .addResource("refresh")
       .addMethod("POST", new apigateway.LambdaIntegration(refreshLambda));
 
-    api.root.addResource("monitors").addMethod(
+    const monitors = api.root.addResource("monitors");
+    monitors.addMethod(
       "POST",
       new apigateway.LambdaIntegration(createMonitorLambda),
+      {
+        authorizer,
+        authorizationType: apigateway.AuthorizationType.COGNITO_USER_POOLS,
+      },
+    );
+    monitors.addResource("{monitorId}").addMethod(
+      "GET",
+      new apigateway.LambdaIntegration(getMonitorLambda),
       {
         authorizer,
         authorizationType: apigateway.AuthorizationType.COGNITO_USER_POOLS,
@@ -144,6 +172,9 @@ export class AuthApiStack extends cdk.Stack {
     });
     new cdk.CfnOutput(this, "CreateMonitorUrl", {
       value: api.urlForPath("/monitors"),
+    });
+    new cdk.CfnOutput(this, "GetMonitorUrlTemplate", {
+      value: api.urlForPath("/monitors/{monitorId}"),
     });
     new cdk.CfnOutput(this, "MonitorsTableName", {
       value: monitorsTable.tableName,
