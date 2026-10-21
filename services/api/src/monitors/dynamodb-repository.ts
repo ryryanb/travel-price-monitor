@@ -1,5 +1,5 @@
-import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
-import type { MonitorRepository, PriceMonitor } from "./types.ts";
+import { DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import type { MonitorReaderRepository, MonitorRepository, PriceMonitor } from "./types.ts";
 
 const client = new DynamoDBClient({
   region: process.env.AWS_REGION || "ap-southeast-1",
@@ -8,7 +8,7 @@ const client = new DynamoDBClient({
 
 function stringValue(value: string) { return { S: value }; }
 
-export function createDynamoDbMonitorRepository(tableName: string): MonitorRepository {
+export function createDynamoDbMonitorRepository(tableName: string): MonitorRepository & MonitorReaderRepository {
   return {
     async create(monitor: PriceMonitor): Promise<void> {
       await client.send(new PutItemCommand({
@@ -31,6 +31,53 @@ export function createDynamoDbMonitorRepository(tableName: string): MonitorRepos
         },
         ConditionExpression: "attribute_not_exists(PK) AND attribute_not_exists(SK)",
       }));
+    },
+
+    async getById(userId: string, monitorId: string): Promise<PriceMonitor | undefined> {
+      const result = await client.send(new GetItemCommand({
+        TableName: tableName,
+        Key: {
+          PK: stringValue(`USER#${userId}`),
+          SK: stringValue(`MONITOR#${monitorId}`),
+        },
+        ConsistentRead: true,
+      }));
+      const item = result.Item;
+      if (!item) return undefined;
+      const readString = (name: string): string | undefined => item[name]?.S;
+      const readNumber = (name: string): number | undefined => {
+        const value = item[name]?.N;
+        return value === undefined ? undefined : Number(value);
+      };
+      const storedMonitorId = readString("monitorId");
+      const storedUserId = readString("userId");
+      const origin = readString("origin");
+      const destination = readString("destination");
+      const departureDate = readString("departureDate");
+      const targetPrice = readNumber("targetPrice");
+      const currency = readString("currency");
+      const status = readString("status");
+      const createdAt = readString("createdAt");
+      const updatedAt = readString("updatedAt");
+      if (!storedMonitorId || !storedUserId || !origin || !destination || !departureDate ||
+          targetPrice === undefined || !currency || (status !== "ACTIVE" && status !== "PAUSED") ||
+          !createdAt || !updatedAt) {
+        throw new Error("Stored monitor record is invalid.");
+      }
+      const returnDate = readString("returnDate");
+      return {
+        monitorId: storedMonitorId,
+        userId: storedUserId,
+        origin,
+        destination,
+        departureDate,
+        ...(returnDate ? { returnDate } : {}),
+        targetPrice,
+        currency,
+        status,
+        createdAt,
+        updatedAt,
+      };
     },
   };
 }
