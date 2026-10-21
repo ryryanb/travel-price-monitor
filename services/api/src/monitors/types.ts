@@ -26,3 +26,7 @@ export interface PriceMonitor {
 export interface MonitorRepository {
   create(monitor: PriceMonitor): Promise<void>;
 }
+
+export interface MonitorReaderRepository {
+  getById(userId: string, monitorId: string): Promise<PriceMonitor | undefined>;
+}
