@@ -23,6 +23,7 @@ export function createDynamoDbMonitorRepository(tableName: string): MonitorRepos
           destination: stringValue(monitor.destination),
           departureDate: stringValue(monitor.departureDate),
           ...(monitor.returnDate ? { returnDate: stringValue(monitor.returnDate) } : {}),
+          passengerCount: { N: String(monitor.passengerCount) },
           targetPrice: { N: String(monitor.targetPrice) },
           currency: stringValue(monitor.currency),
           status: stringValue(monitor.status),
@@ -54,12 +55,15 @@ export function createDynamoDbMonitorRepository(tableName: string): MonitorRepos
       const origin = readString("origin");
       const destination = readString("destination");
       const departureDate = readString("departureDate");
+      // Older records predate MON-006; treat them as single-passenger monitors.
+      const passengerCount = readNumber("passengerCount") ?? 1;
       const targetPrice = readNumber("targetPrice");
       const currency = readString("currency");
       const status = readString("status");
       const createdAt = readString("createdAt");
       const updatedAt = readString("updatedAt");
       if (!storedMonitorId || !storedUserId || !origin || !destination || !departureDate ||
+          !Number.isInteger(passengerCount) || passengerCount < 1 || passengerCount > 9 ||
           targetPrice === undefined || !currency || (status !== "ACTIVE" && status !== "PAUSED") ||
           !createdAt || !updatedAt) {
         throw new Error("Stored monitor record is invalid.");
@@ -72,6 +76,7 @@ export function createDynamoDbMonitorRepository(tableName: string): MonitorRepos
         destination,
         departureDate,
         ...(returnDate ? { returnDate } : {}),
+        passengerCount,
         targetPrice,
         currency,
         status,
