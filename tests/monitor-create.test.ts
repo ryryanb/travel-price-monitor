@@ -8,7 +8,29 @@ const returnDate = new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 1
 const validInput = { origin: " mnl ", destination: "nrt", departureDate: futureDate, returnDate, targetPrice: 425.5, currency: "usd" };
 
 test("normalizes valid monitor criteria", () => {
-  assert.deepEqual(validateCreateMonitorInput(validInput), { origin: "MNL", destination: "NRT", departureDate: futureDate, returnDate, targetPrice: 425.5, currency: "USD" });
+  assert.deepEqual(validateCreateMonitorInput(validInput), {
+    origin: "MNL", destination: "NRT", departureDate: futureDate, returnDate,
+    passengerCount: 1, targetPrice: 425.5, currency: "USD",
+  });
+});
+
+test("defaults passenger count to one when omitted", () => {
+  assert.equal(validateCreateMonitorInput(validInput).passengerCount, 1);
+});
+
+test("accepts passenger counts from one through nine", () => {
+  for (const passengerCount of [1, 2, 5, 9]) {
+    assert.equal(validateCreateMonitorInput({ ...validInput, passengerCount }).passengerCount, passengerCount);
+  }
+});
+
+test("rejects invalid passenger counts", () => {
+  for (const passengerCount of [0, -1, 1.5, 10, 100, "2", null, Number.NaN, Number.POSITIVE_INFINITY]) {
+    assert.throws(
+      () => validateCreateMonitorInput({ ...validInput, passengerCount }),
+      /Passenger count must be an integer between 1 and 9/,
+    );
+  }
 });
 
 test("rejects identical airports", () => {
@@ -55,8 +77,17 @@ test("creates and persists an active monitor for the authenticated user", async 
   assert.equal(result.status, "ACTIVE");
   assert.equal(result.createdAt, now.toISOString());
   assert.equal(result.updatedAt, now.toISOString());
+  assert.equal(result.passengerCount, 1);
   assert.equal(result.targetPrice, 425.5);
   assert.equal(result.currency, "USD");
+});
+
+test("persists the requested passenger count", async () => {
+  let saved: PriceMonitor | undefined;
+  const repository: MonitorRepository = { async create(monitor) { saved = monitor; } };
+  const result = await createPriceMonitor({ ...validInput, passengerCount: 3 }, "cognito-user-sub", repository);
+  assert.equal(result.passengerCount, 3);
+  assert.equal(saved?.passengerCount, 3);
 });
 
 test("does not accept a missing authenticated user", async () => {
