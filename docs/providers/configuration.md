@@ -1,35 +1,32 @@
 # Travel provider configuration
 
-PROV-002 configures **Amadeus Self-Service APIs** as the initial flight-price provider. Provider configuration lives in `services/api/src/providers/config.ts`; the rest of the monitoring system should depend on the provider-neutral contract in `travel-price-provider.ts`, not vendor credentials or native API payloads.
+PROV-002 configures **SerpApi's Google Flights search API** as the initial flight-price source. Provider settings live in `services/api/src/providers/config.ts`; monitoring code should depend on the provider-neutral contract in `travel-price-provider.ts`, not vendor credentials or native API payloads.
 
 ## Create credentials
 
-Create an application in the [Amadeus for Developers portal](https://developers.amadeus.com/) and obtain its API key and API secret.
-
-The default host is the Amadeus test environment, `https://test.api.amadeus.com`. Start with test credentials. To use the production API, explicitly set `AMADEUS_BASE_URL=https://api.amadeus.com` and provide credentials enabled for production.
+Review SerpApi's current Google Flights API documentation and plans at [SerpApi Google Flights API](https://serpapi.com/google-flights-api). Create an account and generate an API key. Check current plan limits and pricing before relying on it for scheduled monitoring; API access and quotas are subject to the provider's terms.
 
 ## Environment variables
 
 Copy `.env.example` to `.env.local` and configure:
 
 ```dotenv
-TRAVEL_PROVIDER=amadeus
-AMADEUS_CLIENT_ID=your-amadeus-api-key
-AMADEUS_CLIENT_SECRET=your-amadeus-api-secret
-# Optional; defaults to the test API host.
-AMADEUS_BASE_URL=https://test.api.amadeus.com
+TRAVEL_PROVIDER=serpapi
+SERPAPI_API_KEY=your-serpapi-api-key
+# Optional; defaults to the standard search endpoint.
+SERPAPI_BASE_URL=https://serpapi.com/search.json
 ```
 
 Never commit real credentials or expose them in frontend code. Use the deployment platform's secret manager for deployed environments.
 
 ## Behavior and scope
 
-- If `TRAVEL_PROVIDER` is unset, it defaults to `amadeus`.
+- If `TRAVEL_PROVIDER` is unset, it defaults to `serpapi`.
 - Provider identifiers are case-insensitive.
 - Unknown providers fail fast with a clear error.
-- Both credentials are required.
-- The API base URL defaults to the test host and must use HTTPS.
-- This story adds configuration validation only. OAuth token acquisition, flight-offer requests, response normalization, and provider registration belong to subsequent integration work.
+- `SERPAPI_API_KEY` is required.
+- The endpoint defaults to SerpApi's search endpoint and must use HTTPS.
+- This story configures and validates settings only. Sending Google Flights search requests, mapping SerpApi responses into `PriceResult`, and registering the provider are separate integration work.
 
 ## Validation
 
