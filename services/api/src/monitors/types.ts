@@ -5,6 +5,7 @@ export interface CreatePriceMonitorInput {
   destination: string;
   departureDate: string;
   returnDate?: string;
+  passengerCount?: number;
   targetPrice: number;
   currency?: string;
 }
@@ -16,6 +17,7 @@ export interface PriceMonitor {
   destination: string;
   departureDate: string;
   returnDate?: string;
+  passengerCount: number;
   targetPrice: number;
   currency: string;
   status: MonitorStatus;

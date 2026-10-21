@@ -11,6 +11,7 @@ const monitor: PriceMonitor = {
   destination: "NRT",
   departureDate: "2027-02-15",
   returnDate: "2027-02-22",
+  passengerCount: 1,
   targetPrice: 500,
   currency: "USD",
   status: "ACTIVE",
