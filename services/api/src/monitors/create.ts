@@ -1,17 +1,10 @@
 import { randomUUID } from "node:crypto";
-import type { CreatePriceMonitorInput, MonitorRepository, PriceMonitor } from "./types.ts";
+import type { MonitorRepository, PriceMonitor } from "./types.ts";
 
 const AIRPORT_CODE = /^[A-Z]{3}$/;
 const CURRENCY_CODE = /^[A-Z]{3}$/;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-
-function normalizeAirportCode(value: unknown, fieldName: "Origin" | "Destination"): string {
-  const code = typeof value === "string" ? value.trim().toUpperCase() : "";
-  if (!AIRPORT_CODE.test(code)) {
-    throw new Error(`${fieldName} must be a three-letter IATA airport code.`);
-  }
-  return code;
-}
+const MAX_PASSENGERS = 9;
 
 function isRealDate(value: string): boolean {
   if (!ISO_DATE.test(value)) return false;
@@ -28,6 +21,7 @@ export function validateCreateMonitorInput(input: unknown): Omit<PriceMonitor, "
   const destination = typeof value.destination === "string" ? value.destination.trim().toUpperCase() : "";
   const departureDate = typeof value.departureDate === "string" ? value.departureDate.trim() : "";
   const returnDate = typeof value.returnDate === "string" && value.returnDate.trim() ? value.returnDate.trim() : undefined;
+  const passengerCount = value.passengerCount === undefined ? 1 : value.passengerCount;
   const targetPrice = value.targetPrice;
   const currency = typeof value.currency === "string" && value.currency.trim()
     ? value.currency.trim().toUpperCase()
@@ -42,6 +36,9 @@ export function validateCreateMonitorInput(input: unknown): Omit<PriceMonitor, "
     if (!isRealDate(returnDate)) throw new Error("Return date must be a valid YYYY-MM-DD date.");
     if (returnDate < departureDate) throw new Error("Return date cannot be before departure date.");
   }
+  if (typeof passengerCount !== "number" || !Number.isInteger(passengerCount) || passengerCount < 1 || passengerCount > MAX_PASSENGERS) {
+    throw new Error(`Passenger count must be an integer between 1 and ${MAX_PASSENGERS}.`);
+  }
   if (typeof targetPrice !== "number" || !Number.isFinite(targetPrice) || targetPrice <= 0 || targetPrice > 10_000_000) {
     throw new Error("Target price must be a positive number no greater than 10000000.");
   }
@@ -52,6 +49,7 @@ export function validateCreateMonitorInput(input: unknown): Omit<PriceMonitor, "
     destination,
     departureDate,
     ...(returnDate ? { returnDate } : {}),
+    passengerCount,
     targetPrice: Math.round(targetPrice * 100) / 100,
     currency,
   };
