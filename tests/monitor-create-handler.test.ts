@@ -46,15 +46,36 @@ test("rejects a missing body and malformed JSON", async () => {
   assert.equal(malformed.statusCode, 400);
 });
 
-test("rejects invalid monitor criteria without persisting", async () => {
+test("rejects invalid criteria with a 400 response before initializing storage", async () => {
   process.env.MONITORS_TABLE_NAME = "monitors";
-  let persisted = false;
-  const response = await handleCreateMonitor({
-    ...authenticated,
-    body: JSON.stringify({ ...validInput, origin: "not-an-airport" }),
-  }, () => ({ async create() { persisted = true; } }));
-  assert.equal(response.statusCode, 400);
-  assert.equal(persisted, false);
+  const invalidInputs = [
+    { ...validInput, origin: "not-an-airport" },
+    { ...validInput, destination: "MNL" },
+    { ...validInput, departureDate: "2020-02-30" },
+    { ...validInput, returnDate: "2020-01-01" },
+    { ...validInput, passengerCount: 0 },
+    { ...validInput, passengerCount: 1.5 },
+    { ...validInput, targetPrice: 0 },
+    { ...validInput, currency: "US" },
+    [],
+    null,
+  ];
+  for (const input of invalidInputs) {
+    let repositoryInitialized = false;
+    let persisted = false;
+    const response = await handleCreateMonitor({
+      ...authenticated,
+      body: JSON.stringify(input),
+    }, () => {
+      repositoryInitialized = true;
+      return { async create() { persisted = true; } };
+    });
+
+    assert.equal(response.statusCode, 400, `Expected invalid input to return 400: ${JSON.stringify(input)}`);
+    assert.equal(repositoryInitialized, false, "Invalid criteria must not initialize storage");
+    assert.equal(persisted, false, "Invalid criteria must not be persisted");
+    assert.equal(typeof JSON.parse(response.body).message, "string");
+  }
 });
 
 test("reports missing storage configuration", async () => {
