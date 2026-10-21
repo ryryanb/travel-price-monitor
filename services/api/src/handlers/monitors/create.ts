@@ -1,4 +1,4 @@
-import { createPriceMonitor } from "../../monitors/create.ts";
+import { createPriceMonitor, MonitorValidationError, validateCreateMonitorInput } from "../../monitors/create.ts";
 import type { MonitorRepository } from "../../monitors/types.ts";
 import type { ApiGatewayResponse } from "../../auth/types.ts";
 
@@ -27,36 +27,36 @@ export async function handleCreateMonitor(
   event: MonitorRequest,
   repositoryFactory: RepositoryFactory,
 ): Promise<ApiGatewayResponse> {
+  if (!event.body) return response(400, { message: "Request body is required." });
+
+  let input: unknown;
   try {
-    if (!event.body) return response(400, { message: "Request body is required." });
-    let input: unknown;
-    try {
-      input = JSON.parse(event.body) as unknown;
-    } catch {
-      return response(400, { message: "Request body must be valid JSON." });
-    }
+    input = JSON.parse(event.body) as unknown;
+  } catch {
+    return response(400, { message: "Request body must be valid JSON." });
+  }
 
-    const claims = event.requestContext?.authorizer?.claims ?? event.requestContext?.authorizer?.jwt?.claims;
-    const userId = typeof claims?.sub === "string" ? claims.sub : "";
-    if (!userId) return response(401, { message: "Authentication is required." });
+  const claims = event.requestContext?.authorizer?.claims ?? event.requestContext?.authorizer?.jwt?.claims;
+  const userId = typeof claims?.sub === "string" ? claims.sub : "";
+  if (!userId) return response(401, { message: "Authentication is required." });
 
-    const tableName = env.MONITORS_TABLE_NAME;
-    if (!tableName) return response(500, { message: "Monitor storage is not configured." });
-
-    const monitor = await createPriceMonitor(input, userId, await repositoryFactory(tableName));
-    return response(201, monitor as unknown as Record<string, unknown>);
+  // Validate all user-provided criteria before initializing storage or attempting persistence.
+  let validInput: ReturnType<typeof validateCreateMonitorInput>;
+  try {
+    validInput = validateCreateMonitorInput(input);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-    if (
-      message.startsWith("Origin must") ||
-      message.startsWith("Destination must") ||
-      message.startsWith("Departure date") ||
-      message.startsWith("Return date") ||
-      message.startsWith("Target price") ||
-      message.startsWith("Currency must") ||
-      message === "Origin and destination must be different." ||
-      message === "Request body must be a JSON object."
-    ) return response(400, { message });
+    if (error instanceof MonitorValidationError) return response(400, { message: error.message });
+    return response(500, { message: "Unable to validate price monitor criteria." });
+  }
+
+  const tableName = env.MONITORS_TABLE_NAME;
+  if (!tableName) return response(500, { message: "Monitor storage is not configured." });
+
+  try {
+    const repository = await repositoryFactory(tableName);
+    const monitor = await createPriceMonitor(validInput, userId, repository);
+    return response(201, monitor as unknown as Record<string, unknown>);
+  } catch {
     return response(502, { message: "Unable to create price monitor." });
   }
 }

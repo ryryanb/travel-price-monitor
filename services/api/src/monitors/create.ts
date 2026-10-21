@@ -6,6 +6,13 @@ const CURRENCY_CODE = /^[A-Z]{3}$/;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_PASSENGERS = 9;
 
+export class MonitorValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "MonitorValidationError";
+  }
+}
+
 function isRealDate(value: string): boolean {
   if (!ISO_DATE.test(value)) return false;
   const date = new Date(`${value}T00:00:00.000Z`);
@@ -14,7 +21,7 @@ function isRealDate(value: string): boolean {
 
 export function validateCreateMonitorInput(input: unknown): Omit<PriceMonitor, "monitorId" | "userId" | "status" | "createdAt" | "updatedAt"> {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
-    throw new Error("Request body must be a JSON object.");
+    throw new MonitorValidationError("Request body must be a JSON object.");
   }
   const value = input as Record<string, unknown>;
   const origin = typeof value.origin === "string" ? value.origin.trim().toUpperCase() : "";
@@ -27,22 +34,22 @@ export function validateCreateMonitorInput(input: unknown): Omit<PriceMonitor, "
     ? value.currency.trim().toUpperCase()
     : "USD";
 
-  if (!AIRPORT_CODE.test(origin)) throw new Error("Origin must be a three-letter IATA airport code.");
-  if (!AIRPORT_CODE.test(destination)) throw new Error("Destination must be a three-letter IATA airport code.");
-  if (origin === destination) throw new Error("Origin and destination must be different.");
-  if (!isRealDate(departureDate)) throw new Error("Departure date must be a valid YYYY-MM-DD date.");
-  if (departureDate < new Date().toISOString().slice(0, 10)) throw new Error("Departure date cannot be in the past.");
+  if (!AIRPORT_CODE.test(origin)) throw new MonitorValidationError("Origin must be a three-letter IATA airport code.");
+  if (!AIRPORT_CODE.test(destination)) throw new MonitorValidationError("Destination must be a three-letter IATA airport code.");
+  if (origin === destination) throw new MonitorValidationError("Origin and destination must be different.");
+  if (!isRealDate(departureDate)) throw new MonitorValidationError("Departure date must be a valid YYYY-MM-DD date.");
+  if (departureDate < new Date().toISOString().slice(0, 10)) throw new MonitorValidationError("Departure date cannot be in the past.");
   if (returnDate !== undefined) {
-    if (!isRealDate(returnDate)) throw new Error("Return date must be a valid YYYY-MM-DD date.");
-    if (returnDate < departureDate) throw new Error("Return date cannot be before departure date.");
+    if (!isRealDate(returnDate)) throw new MonitorValidationError("Return date must be a valid YYYY-MM-DD date.");
+    if (returnDate < departureDate) throw new MonitorValidationError("Return date cannot be before departure date.");
   }
   if (typeof passengerCount !== "number" || !Number.isInteger(passengerCount) || passengerCount < 1 || passengerCount > MAX_PASSENGERS) {
-    throw new Error(`Passenger count must be an integer between 1 and ${MAX_PASSENGERS}.`);
+    throw new MonitorValidationError(`Passenger count must be an integer between 1 and ${MAX_PASSENGERS}.`);
   }
   if (typeof targetPrice !== "number" || !Number.isFinite(targetPrice) || targetPrice <= 0 || targetPrice > 10_000_000) {
-    throw new Error("Target price must be a positive number no greater than 10000000.");
+    throw new MonitorValidationError("Target price must be a positive number no greater than 10000000.");
   }
-  if (!CURRENCY_CODE.test(currency)) throw new Error("Currency must be a three-letter ISO currency code.");
+  if (!CURRENCY_CODE.test(currency)) throw new MonitorValidationError("Currency must be a three-letter ISO currency code.");
 
   return {
     origin,
