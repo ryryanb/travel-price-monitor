@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { PUBLIC_API_BASE_URL } from '$env/static/public';
+  import { onMount } from 'svelte';
 
   let name = '';
   let origin = '';
@@ -37,8 +37,15 @@
     if (roundTrip && !returnDate) return 'Choose a return date or turn off round trip.';
     if (roundTrip && returnDate < departureDate) return 'Return date cannot be before departure.';
     if (!Number.isInteger(Number(passengerCount)) || Number(passengerCount) < 1 || Number(passengerCount) > 9) return 'Passengers must be between 1 and 9.';
-    const price = Number(targetPrice);
-    if (!targetPrice.trim() || !Number.isFinite(price) || price <= 0 || price > 10000000) return 'Enter a target price greater than 0 and no more than 10,000,000.';
+    
+    const rawTargetPrice = String(targetPrice ?? '').trim();
+const price = Number(rawTargetPrice);
+
+if (!rawTargetPrice || !Number.isFinite(price) || price <= 0 || price > 10000000) {
+  return 'Enter a target price greater than 0 and no more than 10,000,000.';
+}
+    
+    
     if (!/^[A-Z]{3}$/.test(currency)) return 'Choose a valid three-letter currency code.';
     return '';
   }
