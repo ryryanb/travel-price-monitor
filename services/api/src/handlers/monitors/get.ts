@@ -12,7 +12,7 @@ interface MonitorRequest {
 }
 
 type RepositoryFactory = (tableName: string) => MonitorReaderRepository | Promise<MonitorReaderRepository>;
-const headers = { "content-type": "application/json" };
+const headers = { "content-type": "application/json", "access-control-allow-origin": process.env.WEB_ORIGIN || "http://localhost:5173", "access-control-allow-headers": "Content-Type,Authorization", "access-control-allow-methods": "GET,POST,OPTIONS", "vary": "Origin" };
 const env = process.env;
 
 export async function handler(event: MonitorRequest): Promise<ApiGatewayResponse> {

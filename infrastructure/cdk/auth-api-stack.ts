@@ -34,6 +34,11 @@ export class AuthApiStack extends cdk.Stack {
       pointInTimeRecovery: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
+    // Set LOCALSTACK_ENDPOINT_URL when deploying locally (for example,
+    // http://host.docker.internal:4566 on macOS). Lambda containers then
+    // route Cognito and DynamoDB SDK calls back to LocalStack rather than AWS.
+    const localStackEndpoint = process.env.LOCALSTACK_ENDPOINT_URL || "";
+
     const common = {
       runtime: lambda.Runtime.NODEJS_22_X,
       timeout: cdk.Duration.seconds(15),
@@ -41,6 +46,8 @@ export class AuthApiStack extends cdk.Stack {
       environment: {
         COGNITO_USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
         COGNITO_REGION: cdk.Stack.of(this).region,
+        COGNITO_ENDPOINT_URL: localStackEndpoint,
+        WEB_ORIGIN: process.env.WEB_ORIGIN || "http://localhost:5173",
       },
       bundling: {
         target: "node22",
@@ -93,6 +100,8 @@ export class AuthApiStack extends cdk.Stack {
       functionName: "travel-price-monitor-create-monitor",
       environment: {
         MONITORS_TABLE_NAME: monitorsTable.tableName,
+        DYNAMODB_ENDPOINT_URL: localStackEndpoint,
+        WEB_ORIGIN: process.env.WEB_ORIGIN || "http://localhost:5173",
       },
       bundling: {
         target: "node22",
@@ -112,6 +121,8 @@ export class AuthApiStack extends cdk.Stack {
       functionName: "travel-price-monitor-get-monitor",
       environment: {
         MONITORS_TABLE_NAME: monitorsTable.tableName,
+        DYNAMODB_ENDPOINT_URL: localStackEndpoint,
+        WEB_ORIGIN: process.env.WEB_ORIGIN || "http://localhost:5173",
       },
       bundling: {
         target: "node22",
@@ -125,6 +136,18 @@ export class AuthApiStack extends cdk.Stack {
     const api = new apigateway.RestApi(this, "Api", {
       restApiName: "travel-price-monitor-api",
       deployOptions: { stageName: "v1" },
+      // The browser sends a preflight request before authenticated JSON calls.
+      // Keep local origins explicit; add the deployed frontend origin via WEB_ORIGIN.
+      defaultCorsPreflightOptions: {
+        allowOrigins: [
+          "http://localhost:5173",
+          "http://127.0.0.1:5173",
+          ...(process.env.WEB_ORIGIN ? [process.env.WEB_ORIGIN] : []),
+        ],
+        allowMethods: ["GET", "POST", "OPTIONS"],
+        allowHeaders: ["Content-Type", "Authorization"],
+        maxAge: cdk.Duration.hours(1),
+      },
     });
     const authorizer = new apigateway.CognitoUserPoolsAuthorizer(this, "ApiAuthorizer", { cognitoUserPools: [userPool] });
     const auth = api.root.addResource("auth");
