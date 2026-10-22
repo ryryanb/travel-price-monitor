@@ -1,6 +1,7 @@
 export type MonitorStatus = "ACTIVE" | "PAUSED";
 
 export interface CreatePriceMonitorInput {
+  name: string;
   origin: string;
   destination: string;
   departureDate: string;
@@ -13,6 +14,7 @@ export interface CreatePriceMonitorInput {
 export interface PriceMonitor {
   monitorId: string;
   userId: string;
+  name: string;
   origin: string;
   destination: string;
   departureDate: string;
