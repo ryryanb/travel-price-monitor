@@ -10,6 +10,7 @@ The endpoint requires a valid Cognito User Pool ID token sent as `Authorization:
 
 ```json
 {
+  "name": "Tokyo Winter Trip",
   "origin": "MNL",
   "destination": "NRT",
   "departureDate": "2027-02-15",
@@ -19,6 +20,7 @@ The endpoint requires a valid Cognito User Pool ID token sent as `Authorization:
 }
 ```
 
+- `name`: required display name, trimmed before storage, 1–100 characters.
 - `origin`, `destination`: required three-letter IATA airport codes; normalized to uppercase and must differ.
 - `departureDate`: required real calendar date in `YYYY-MM-DD` format, today or later.
 - `returnDate`: optional for one-way trips; if supplied, must be a real date on or after departure.
@@ -27,7 +29,7 @@ The endpoint requires a valid Cognito User Pool ID token sent as `Authorization:
 
 ## Success and errors
 
-A successful request returns `201 Created` with the saved monitor, including generated `monitorId`, authenticated `userId`, `ACTIVE` status, and timestamps.
+A successful request returns `201 Created` with the saved monitor, including the saved monitor name, generated `monitorId`, authenticated `userId`, `ACTIVE` status, and timestamps.
 
 - `400`: missing/malformed JSON or invalid trip criteria.
 - `401`: missing authenticated subject (normally rejected by API Gateway first).
