@@ -2,7 +2,7 @@ import { createCognitoAuthClient } from "../../auth/cognito.js";
 import { authenticateUser } from "../../auth/login.js";
 import type { ApiGatewayRequest, ApiGatewayResponse } from "../../auth/types.js";
 
-const headers = { "content-type": "application/json", "access-control-allow-origin": environment.WEB_ORIGIN || "http://localhost:5173", "access-control-allow-headers": "Content-Type,Authorization", "access-control-allow-methods": "GET,POST,OPTIONS", "vary": "Origin" };
+const headers = { "content-type": "application/json", "access-control-allow-origin": process.env.WEB_ORIGIN || "http://localhost:5173", "access-control-allow-headers": "Content-Type,Authorization", "access-control-allow-methods": "GET,POST,OPTIONS", "vary": "Origin" };
 const environment = (globalThis as typeof globalThis & { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
 
 export async function handler(event: ApiGatewayRequest): Promise<ApiGatewayResponse> {
