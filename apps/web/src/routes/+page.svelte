@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { env } from '$env/dynamic/public';
+  import { PUBLIC_API_BASE_URL } from '$env/static/public';
 
   let name = '';
   let origin = '';
@@ -17,7 +17,7 @@
   let successMessage = '';
   let createdMonitorId = '';
 
-  const apiBaseUrl = (env.PUBLIC_API_BASE_URL ?? '').replace(/\/$/, '');
+  const apiBaseUrl = (PUBLIC_API_BASE_URL ?? '').replace(/\/$/, '');
 
   onMount(() => {
     minDate = new Date().toISOString().slice(0, 10);
