@@ -14,6 +14,7 @@ A successful request returns `200 OK` and the monitor details:
 {
   "monitorId": "monitor-123",
   "userId": "cognito-user-sub",
+  "name": "Tokyo Winter Trip",
   "origin": "MNL",
   "destination": "NRT",
   "departureDate": "2027-02-15",
@@ -26,7 +27,7 @@ A successful request returns `200 OK` and the monitor details:
 }
 ```
 
-The `returnDate` property is omitted for one-way trips.
+The `name` field contains the user-provided monitor name. The `returnDate` property is omitted for one-way trips. Older stored records without a name are returned with a fallback label based on their route and departure date.
 
 ## Errors
 
