@@ -5,6 +5,7 @@ const AIRPORT_CODE = /^[A-Z]{3}$/;
 const CURRENCY_CODE = /^[A-Z]{3}$/;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_PASSENGERS = 9;
+const MAX_MONITOR_NAME_LENGTH = 100;
 
 export class MonitorValidationError extends Error {
   constructor(message: string) {
@@ -24,6 +25,7 @@ export function validateCreateMonitorInput(input: unknown): Omit<PriceMonitor, "
     throw new MonitorValidationError("Request body must be a JSON object.");
   }
   const value = input as Record<string, unknown>;
+  const name = typeof value.name === "string" ? value.name.trim() : "";
   const origin = typeof value.origin === "string" ? value.origin.trim().toUpperCase() : "";
   const destination = typeof value.destination === "string" ? value.destination.trim().toUpperCase() : "";
   const departureDate = typeof value.departureDate === "string" ? value.departureDate.trim() : "";
@@ -34,6 +36,10 @@ export function validateCreateMonitorInput(input: unknown): Omit<PriceMonitor, "
     ? value.currency.trim().toUpperCase()
     : "USD";
 
+  if (!name) throw new MonitorValidationError("Monitor name is required.");
+  if (name.length > MAX_MONITOR_NAME_LENGTH) {
+    throw new MonitorValidationError(`Monitor name must be ${MAX_MONITOR_NAME_LENGTH} characters or fewer.`);
+  }
   if (!AIRPORT_CODE.test(origin)) throw new MonitorValidationError("Origin must be a three-letter IATA airport code.");
   if (!AIRPORT_CODE.test(destination)) throw new MonitorValidationError("Destination must be a three-letter IATA airport code.");
   if (origin === destination) throw new MonitorValidationError("Origin and destination must be different.");
@@ -52,6 +58,7 @@ export function validateCreateMonitorInput(input: unknown): Omit<PriceMonitor, "
   if (!CURRENCY_CODE.test(currency)) throw new MonitorValidationError("Currency must be a three-letter ISO currency code.");
 
   return {
+    name,
     origin,
     destination,
     departureDate,
