@@ -7,6 +7,7 @@ const originalTableName = process.env.MONITORS_TABLE_NAME;
 const monitor: PriceMonitor = {
   monitorId: "monitor-123",
   userId: "user-123",
+  name: "Tokyo Winter Trip",
   origin: "MNL",
   destination: "NRT",
   departureDate: "2027-02-15",

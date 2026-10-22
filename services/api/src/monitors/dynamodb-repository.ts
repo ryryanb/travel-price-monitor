@@ -19,6 +19,7 @@ export function createDynamoDbMonitorRepository(tableName: string): MonitorRepos
           entityType: stringValue("PRICE_MONITOR"),
           monitorId: stringValue(monitor.monitorId),
           userId: stringValue(monitor.userId),
+          name: stringValue(monitor.name),
           origin: stringValue(monitor.origin),
           destination: stringValue(monitor.destination),
           departureDate: stringValue(monitor.departureDate),
@@ -69,9 +70,12 @@ export function createDynamoDbMonitorRepository(tableName: string): MonitorRepos
         throw new Error("Stored monitor record is invalid.");
       }
       const returnDate = readString("returnDate");
+      // Preserve compatibility with monitors created before MON-009.
+      const name = readString("name") || `${origin} → ${destination} (${departureDate})`;
       return {
         monitorId: storedMonitorId,
         userId: storedUserId,
+        name,
         origin,
         destination,
         departureDate,

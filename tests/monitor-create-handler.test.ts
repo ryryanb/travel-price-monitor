@@ -5,7 +5,7 @@ import type { MonitorRepository, PriceMonitor } from "../services/api/src/monito
 
 const originalTableName = process.env.MONITORS_TABLE_NAME;
 const departureDate = new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10);
-const validInput = { origin: "MNL", destination: "NRT", departureDate, targetPrice: 500 };
+const validInput = { name: "Tokyo Winter Trip", origin: "MNL", destination: "NRT", departureDate, targetPrice: 500 };
 const authenticated = { requestContext: { authorizer: { claims: { sub: "user-123" } } } };
 
 test.afterEach(() => {
@@ -26,6 +26,7 @@ test("creates a monitor for the authenticated user", async () => {
   assert.equal(response.statusCode, 201);
   assert.equal(table, "monitors");
   assert.equal(saved?.userId, "user-123");
+  assert.equal(saved?.name, "Tokyo Winter Trip");
   assert.equal(saved?.status, "ACTIVE");
   assert.deepEqual(JSON.parse(response.body), saved);
 });
@@ -49,6 +50,8 @@ test("rejects a missing body and malformed JSON", async () => {
 test("rejects invalid criteria with a 400 response before initializing storage", async () => {
   process.env.MONITORS_TABLE_NAME = "monitors";
   const invalidInputs = [
+    { ...validInput, name: " " },
+    { ...validInput, name: "x".repeat(101) },
     { ...validInput, origin: "not-an-airport" },
     { ...validInput, destination: "MNL" },
     { ...validInput, departureDate: "2020-02-30" },

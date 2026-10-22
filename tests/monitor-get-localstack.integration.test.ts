@@ -58,6 +58,7 @@ test("creates and retrieves a monitor through LocalStack DynamoDB", { skip: !ena
 
     const created = await createHandler({
       body: JSON.stringify({
+        name: "Tokyo Winter Trip",
         origin: "MNL",
         destination: "NRT",
         departureDate,

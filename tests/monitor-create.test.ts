@@ -5,13 +5,24 @@ import type { MonitorRepository, PriceMonitor } from "../services/api/src/monito
 
 const futureDate = new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10);
 const returnDate = new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10);
-const validInput = { origin: " mnl ", destination: "nrt", departureDate: futureDate, returnDate, targetPrice: 425.5, currency: "usd" };
+const validInput = { name: "Tokyo Winter Trip", origin: " mnl ", destination: "nrt", departureDate: futureDate, returnDate, targetPrice: 425.5, currency: "usd" };
 
 test("normalizes valid monitor criteria", () => {
   assert.deepEqual(validateCreateMonitorInput(validInput), {
-    origin: "MNL", destination: "NRT", departureDate: futureDate, returnDate,
+    name: "Tokyo Winter Trip", origin: "MNL", destination: "NRT", departureDate: futureDate, returnDate,
     passengerCount: 1, targetPrice: 425.5, currency: "USD",
   });
+});
+
+test("trims and requires a meaningful monitor name", () => {
+  assert.equal(validateCreateMonitorInput({ ...validInput, name: "  Japan flights  " }).name, "Japan flights");
+  for (const name of [undefined, null, "", "   ", 123]) {
+    assert.throws(() => validateCreateMonitorInput({ ...validInput, name }), /Monitor name is required/);
+  }
+});
+
+test("rejects monitor names longer than 100 characters", () => {
+  assert.throws(() => validateCreateMonitorInput({ ...validInput, name: "x".repeat(101) }), /100 characters or fewer/);
 });
 
 test("defaults passenger count to one when omitted", () => {
@@ -74,6 +85,7 @@ test("creates and persists an active monitor for the authenticated user", async 
   assert.ok(saved);
   assert.equal(result.monitorId, saved.monitorId);
   assert.equal(result.userId, "cognito-user-sub");
+  assert.equal(result.name, "Tokyo Winter Trip");
   assert.equal(result.status, "ACTIVE");
   assert.equal(result.createdAt, now.toISOString());
   assert.equal(result.updatedAt, now.toISOString());

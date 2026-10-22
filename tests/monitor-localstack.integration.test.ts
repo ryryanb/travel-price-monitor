@@ -61,6 +61,7 @@ test("creates a monitor and persists it to LocalStack DynamoDB", { skip: !enable
     const departureDate = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
     const response = await handler({
       body: JSON.stringify({
+        name: "Tokyo Winter Trip",
         origin: "MNL",
         destination: "NRT",
         departureDate,
@@ -74,6 +75,7 @@ test("creates a monitor and persists it to LocalStack DynamoDB", { skip: !enable
     const monitor = JSON.parse(response.body) as {
       monitorId: string;
       userId: string;
+      name: string;
       origin: string;
       destination: string;
       status: string;
@@ -82,6 +84,7 @@ test("creates a monitor and persists it to LocalStack DynamoDB", { skip: !enable
     };
     assert.ok(monitor.monitorId);
     assert.equal(monitor.userId, "localstack-user-123");
+    assert.equal(monitor.name, "Tokyo Winter Trip");
     assert.equal(monitor.status, "ACTIVE");
 
     const persisted = await client.send(new GetItemCommand({
@@ -95,6 +98,7 @@ test("creates a monitor and persists it to LocalStack DynamoDB", { skip: !enable
 
     assert.equal(persisted.Item?.monitorId?.S, monitor.monitorId);
     assert.equal(persisted.Item?.userId?.S, "localstack-user-123");
+    assert.equal(persisted.Item?.name?.S, "Tokyo Winter Trip");
     assert.equal(persisted.Item?.origin?.S, "MNL");
     assert.equal(persisted.Item?.destination?.S, "NRT");
     assert.equal(persisted.Item?.status?.S, "ACTIVE");
