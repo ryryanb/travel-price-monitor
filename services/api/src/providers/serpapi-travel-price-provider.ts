@@ -1,4 +1,5 @@
 import type { SerpApiProviderConfig } from "./config.ts";
+import { normalizeSerpApiFlightResponse } from "./normalize-serpapi-flight-response.ts";
 import type {
   PriceResult,
   TravelPriceProvider,
@@ -7,14 +8,6 @@ import type {
 
 type SerpApiResponse = {
   error?: unknown;
-  best_flights?: unknown;
-  other_flights?: unknown;
-};
-
-type FlightOffer = {
-  price?: unknown;
-  booking_token?: unknown;
-  flights?: unknown;
 };
 
 export type SerpApiFetchResponse = Pick<Response, "ok" | "status" | "json">;
@@ -28,8 +21,8 @@ export class TravelProviderSearchError extends Error {
 }
 
 /**
- * Sends flight searches to SerpApi's Google Flights engine and normalizes
- * returned offers into the provider-independent PriceResult contract.
+ * Sends flight searches to SerpApi's Google Flights engine. Response mapping
+ * lives in normalize-serpapi-flight-response.ts so it can be tested separately.
  */
 export class SerpApiTravelPriceProvider implements TravelPriceProvider {
   readonly id = "serpapi";
@@ -89,40 +82,12 @@ export class SerpApiTravelPriceProvider implements TravelPriceProvider {
       throw new TravelProviderSearchError("Flight-search provider rejected the search request.");
     }
 
-    const offers = [
-      ...asOffers(body.best_flights),
-      ...asOffers(body.other_flights),
-    ];
-    const checkedAt = this.now().toISOString();
-
-    return offers.flatMap((offer): PriceResult[] => {
-      if (typeof offer.price !== "number" || !Number.isFinite(offer.price) || offer.price <= 0) {
-        return [];
-      }
-
-      const offerId = typeof offer.booking_token === "string" && offer.booking_token.length > 0
-        ? offer.booking_token
-        : undefined;
-
-      return [{
-        providerId: this.id,
-        providerName: this.name,
-        ...(offerId ? { offerId } : {}),
-        origin: criteria.origin,
-        destination: criteria.destination,
-        departureDate: criteria.departureDate,
-        ...(criteria.returnDate ? { returnDate: criteria.returnDate } : {}),
-        price: offer.price,
-        currency: criteria.currency,
-        checkedAt,
-      }];
-    });
+    return normalizeSerpApiFlightResponse(
+      payload,
+      criteria,
+      this.now().toISOString(),
+      this.id,
+      this.name,
+    );
   }
-}
-
-function asOffers(value: unknown): FlightOffer[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter(
-    (item): item is FlightOffer => Boolean(item) && typeof item === "object" && !Array.isArray(item),
-  );
 }
