@@ -47,6 +47,7 @@ export class AuthApiStack extends cdk.Stack {
         COGNITO_USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
         COGNITO_REGION: cdk.Stack.of(this).region,
         COGNITO_ENDPOINT_URL: localStackEndpoint,
+        WEB_ORIGIN: process.env.WEB_ORIGIN || "http://localhost:5173",
       },
       bundling: {
         target: "node22",
@@ -100,6 +101,7 @@ export class AuthApiStack extends cdk.Stack {
       environment: {
         MONITORS_TABLE_NAME: monitorsTable.tableName,
         DYNAMODB_ENDPOINT_URL: localStackEndpoint,
+        WEB_ORIGIN: process.env.WEB_ORIGIN || "http://localhost:5173",
       },
       bundling: {
         target: "node22",
