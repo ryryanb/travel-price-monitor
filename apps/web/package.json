@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
-    "check": "svelte-check --tsconfig ./tsconfig.json",
-    "build": "vite build",
+    "dev": "svelte-kit sync && vite dev",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "build": "svelte-kit sync && vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
