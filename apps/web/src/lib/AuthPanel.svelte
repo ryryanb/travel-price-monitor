@@ -27,7 +27,7 @@
       errorMessage = 'The API URL is not configured. Set PUBLIC_API_BASE_URL and restart or rebuild the web app.';
       return;
     }
-    if (!normalizedEmail || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(normalizedEmail)) {
+    if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       errorMessage = 'Enter a valid email address.';
       return;
     }
