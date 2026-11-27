@@ -59,7 +59,7 @@
         password = '';
         statusMessage = result.userConfirmed
           ? 'Account created. Sign in with your email and password.'
-          : 'Account created. Check your email for a confirmation code or link, complete confirmation, then sign in.';
+          : 'Account created, but Cognito confirmation is required. This page does not yet have a confirmation-code form; confirm the user in Cognito/LocalStack, then sign in.';
         return;
       }
 
