@@ -2,7 +2,7 @@
   import { PUBLIC_API_BASE_URL } from '$env/static/public';
   import AuthPanel from '$lib/AuthPanel.svelte';
 
-  const apiBaseUrl = (PUBLIC_API_BASE_URL ?? '').replace(/\\/$/, '');
+  const apiBaseUrl = (PUBLIC_API_BASE_URL ?? '').replace(/\/$/, '');
   function onAuthenticated(_idToken: string) {
     // AuthPanel stores the session token; the create-monitor page reads it on submit.
   }
