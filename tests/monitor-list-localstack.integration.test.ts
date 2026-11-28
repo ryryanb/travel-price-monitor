@@ -13,7 +13,7 @@ import type { PriceMonitor } from "../services/api/src/monitors/types.ts";
 
 const enabled = process.env.RUN_LOCALSTACK_INTEGRATION === "1";
 
-test("lists only the owner's monitors, with legacy records and pagination", { skip: !enabled }, async () => {
+test("lists only the owner's monitors, with legacy records", { skip: !enabled }, async () => {
   const endpoint = process.env.DYNAMODB_ENDPOINT_URL ?? "http://localhost:4566";
   const region = process.env.AWS_REGION ?? "ap-southeast-1";
   const tableName = `monitors-list-it-${Date.now()}`;
