@@ -172,7 +172,7 @@ if (!rawTargetPrice || !Number.isFinite(price) || price <= 0 || price > 10000000
       <span class="brand-mark" aria-hidden="true">✦</span>
       <span>Travel Price Monitor</span>
     </a>
-    <span class="topbar-note">Travel smarter. Pay less.</span>
+    <nav class="topbar-nav"><a href="/monitors">My monitors</a></nav>
   </header>
 
   <main>
@@ -310,7 +310,7 @@ if (!rawTargetPrice || !Number.isFinite(price) || price <= 0 || price > 10000000
   .topbar { height: 72px; padding: 0 max(24px, calc((100vw - 1080px) / 2)); display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,.88); border-bottom: 1px solid #e8ebf2; }
   .brand { display: inline-flex; gap: 11px; align-items: center; text-decoration: none; color: #17243b; font-weight: 760; letter-spacing: -.025em; }
   .brand-mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: #3158d8; color: white; font-size: 19px; box-shadow: 0 4px 10px #3158d82e; }
-  .topbar-note { color: #7b879b; font-size: 13px; }
+.topbar-nav a { color: #3158d8; text-decoration: none; font-size: 13px; font-weight: 700; }
   main { width: min(100% - 32px, 760px); margin: 0 auto; padding: 54px 0 24px; }
   .intro { margin: 0 0 28px; }
   .eyebrow { margin: 0 0 11px; color: #3158d8; font-size: 11px; font-weight: 800; letter-spacing: .15em; }
@@ -367,7 +367,7 @@ if (!rawTargetPrice || !Number.isFinite(price) || price <= 0 || price > 10000000
     .topbar { height: 62px; padding: 0 18px; }
     .brand { font-size: 13px; }
     .brand-mark { width: 29px; height: 29px; }
-    .topbar-note { display: none; }
+
     main { width: min(100% - 24px, 760px); padding-top: 34px; }
     .intro { margin-bottom: 22px; }
     .subtitle { font-size: 13px; }

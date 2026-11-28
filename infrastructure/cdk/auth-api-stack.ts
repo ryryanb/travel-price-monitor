@@ -135,6 +135,28 @@ export class AuthApiStack extends cdk.Stack {
     });
     monitorsTable.grantReadData(getMonitorLambda);
 
+    const listMonitorsLambda = new nodejs.NodejsFunction(this, "ListMonitorsLambda", {
+      runtime: lambda.Runtime.NODEJS_22_X,
+      timeout: cdk.Duration.seconds(15),
+      memorySize: 256,
+      entry: path.join(repositoryRoot, "services/api/src/handlers/monitors/list.ts"),
+      projectRoot: repositoryRoot,
+      functionName: "travel-price-monitor-list-monitors",
+      environment: {
+        MONITORS_TABLE_NAME: monitorsTable.tableName,
+        LOCAL_AUTH_DISABLED: String(localMode),
+        DYNAMODB_ENDPOINT_URL: localStackEndpoint,
+        WEB_ORIGIN: process.env.WEB_ORIGIN || "http://localhost:5173",
+      },
+      bundling: {
+        target: "node22",
+        format: nodejs.OutputFormat.ESM,
+        minify: false,
+        sourceMap: true,
+      },
+    });
+    monitorsTable.grantReadData(listMonitorsLambda);
+
     const api = new apigateway.RestApi(this, "Api", {
       restApiName: "travel-price-monitor-api",
       deployOptions: { stageName: "v1" },
@@ -174,6 +196,14 @@ export class AuthApiStack extends cdk.Stack {
         authorizationType: localMode ? apigateway.AuthorizationType.NONE : apigateway.AuthorizationType.COGNITO_USER_POOLS,
       },
     );
+    monitors.addMethod(
+      "GET",
+      new apigateway.LambdaIntegration(listMonitorsLambda),
+      {
+        authorizer,
+        authorizationType: localMode ? apigateway.AuthorizationType.NONE : apigateway.AuthorizationType.COGNITO_USER_POOLS,
+      },
+    );
     monitors.addResource("{monitorId}").addMethod(
       "GET",
       new apigateway.LambdaIntegration(getMonitorLambda),
@@ -204,6 +234,7 @@ export class AuthApiStack extends cdk.Stack {
     new cdk.CfnOutput(this, "CreateMonitorUrl", {
       value: api.urlForPath("/monitors"),
     });
+    new cdk.CfnOutput(this, "ListMonitorsUrl", { value: api.urlForPath("/monitors") });
     new cdk.CfnOutput(this, "GetMonitorUrlTemplate", {
       value: api.urlForPath("/monitors/{monitorId}"),
     });

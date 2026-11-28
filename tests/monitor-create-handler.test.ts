@@ -4,6 +4,12 @@ import { handleCreateMonitor } from "../services/api/src/handlers/monitors/creat
 import type { MonitorRepository, PriceMonitor } from "../services/api/src/monitors/types.ts";
 
 const originalTableName = process.env.MONITORS_TABLE_NAME;
+const originalLocalAuthDisabled = process.env.LOCAL_AUTH_DISABLED;
+
+test.beforeEach(() => {
+  // Keep authenticated tests independent of the developer shell's local mode.
+  process.env.LOCAL_AUTH_DISABLED = "false";
+});
 const departureDate = new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10);
 const validInput = { name: "Tokyo Winter Trip", origin: "MNL", destination: "NRT", departureDate, targetPrice: 500 };
 const authenticated = { requestContext: { authorizer: { claims: { sub: "user-123" } } } };
@@ -11,6 +17,8 @@ const authenticated = { requestContext: { authorizer: { claims: { sub: "user-123
 test.afterEach(() => {
   if (originalTableName === undefined) delete process.env.MONITORS_TABLE_NAME;
   else process.env.MONITORS_TABLE_NAME = originalTableName;
+  if (originalLocalAuthDisabled === undefined) delete process.env.LOCAL_AUTH_DISABLED;
+  else process.env.LOCAL_AUTH_DISABLED = originalLocalAuthDisabled;
 });
 
 test("creates a monitor for the authenticated user", async () => {
@@ -97,4 +105,16 @@ test("returns a server error when persistence fails", async () => {
     body: JSON.stringify(validInput),
   }, () => ({ async create() { throw new Error("database unavailable"); } }));
   assert.equal(response.statusCode, 502);
+});
+
+test("creates a monitor for the fixed local user when authentication is disabled", async () => {
+  process.env.LOCAL_AUTH_DISABLED = "true";
+  process.env.MONITORS_TABLE_NAME = "monitors";
+  let saved: PriceMonitor | undefined;
+  const response = await handleCreateMonitor(
+    { body: JSON.stringify(validInput) },
+    () => ({ async create(monitor) { saved = monitor; } }),
+  );
+  assert.equal(response.statusCode, 201);
+  assert.equal(saved?.userId, "local-dev-user");
 });
