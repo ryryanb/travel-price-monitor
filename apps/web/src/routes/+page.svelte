@@ -1,5 +1,6 @@
 <script lang="ts">
   import { PUBLIC_API_BASE_URL } from '$env/static/public';
+  import { env } from '$env/dynamic/public';
   import { onMount } from 'svelte';
 
   let name = '';
@@ -106,8 +107,9 @@ if (!rawTargetPrice || !Number.isFinite(price) || price <= 0 || price > 10000000
       return;
     }
 
-    const idToken = await getValidIdToken();
-    if (!idToken) {
+    const localMode = env.PUBLIC_LOCAL_AUTH_DISABLED === 'true';
+    const idToken = localMode ? null : await getValidIdToken();
+    if (!localMode && !idToken) {
       errorMessage = 'Please sign in above before creating a monitor. If your session expired, sign in again.';
       return;
     }
@@ -118,7 +120,7 @@ if (!rawTargetPrice || !Number.isFinite(price) || price <= 0 || price > 10000000
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': idToken
+          ...(idToken ? { Authorization: idToken } : {})
         },
         body: JSON.stringify({
           name: name.trim(),
