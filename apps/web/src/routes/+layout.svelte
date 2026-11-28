@@ -1,5 +1,6 @@
 <script lang="ts">
   import { PUBLIC_API_BASE_URL } from '$env/static/public';
+  import { env } from '$env/dynamic/public';
   import AuthPanel from '$lib/AuthPanel.svelte';
 
   const apiBaseUrl = (PUBLIC_API_BASE_URL ?? '').replace(/\/$/, '');
@@ -12,9 +13,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 </svelte:head>
 
+{#if env.PUBLIC_LOCAL_AUTH_DISABLED !== "true"}
 <div class="auth-layout">
   <AuthPanel {apiBaseUrl} {onAuthenticated} />
 </div>
+{/if}
 <slot />
 
 <style>
