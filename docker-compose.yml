@@ -3,7 +3,7 @@ services:
     image: localstack/localstack:2026.09.0
     container_name: travel-price-monitor-localstack
     ports:
-      - "4566:4566"
+      - "127.0.0.1:4566:4566"
     environment:
       - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN:?Set LOCALSTACK_AUTH_TOKEN first}
       - SERVICES=dynamodb,s3,ses,apigateway,lambda,eventbridge,sqs,cognito-idp,ssm,cloudformation,iam
