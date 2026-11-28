@@ -1,5 +1,6 @@
 <script lang="ts">
   import { PUBLIC_API_BASE_URL } from '$env/static/public';
+  import { env } from '$env/dynamic/public';
   import { onMount } from 'svelte';
 
   let name = '';
@@ -50,6 +51,45 @@ if (!rawTargetPrice || !Number.isFinite(price) || price <= 0 || price > 10000000
     return '';
   }
 
+  async function getValidIdToken(): Promise<string | null> {
+    if (typeof sessionStorage === 'undefined') return null;
+
+    const idToken = sessionStorage.getItem('travelPriceMonitor.idToken');
+    const refreshToken = sessionStorage.getItem('travelPriceMonitor.refreshToken');
+    const expiresAt = Number(sessionStorage.getItem('travelPriceMonitor.expiresAt') || 0);
+
+    if (idToken && (!expiresAt || expiresAt > Date.now() + 60_000)) return idToken;
+    if (!refreshToken || !apiBaseUrl) return null;
+
+    try {
+      const response = await fetch(apiBaseUrl + '/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken })
+      });
+      const body: unknown = await response.json().catch(() => ({}));
+      if (!response.ok || !body || typeof body !== 'object') {
+        throw new Error('Session refresh failed');
+      }
+
+      const result = body as { idToken?: string; accessToken?: string; expiresIn?: number };
+      if (!result.idToken || !result.accessToken || !result.expiresIn) {
+        throw new Error('Session refresh returned incomplete tokens');
+      }
+
+      sessionStorage.setItem('travelPriceMonitor.idToken', result.idToken);
+      sessionStorage.setItem('travelPriceMonitor.accessToken', result.accessToken);
+      sessionStorage.setItem('travelPriceMonitor.expiresAt', String(Date.now() + result.expiresIn * 1000));
+      return result.idToken;
+    } catch {
+      sessionStorage.removeItem('travelPriceMonitor.idToken');
+      sessionStorage.removeItem('travelPriceMonitor.accessToken');
+      sessionStorage.removeItem('travelPriceMonitor.refreshToken');
+      sessionStorage.removeItem('travelPriceMonitor.expiresAt');
+      return null;
+    }
+  }
+
   async function submitMonitor(event: SubmitEvent) {
     event.preventDefault();
     errorMessage = '';
@@ -67,12 +107,10 @@ if (!rawTargetPrice || !Number.isFinite(price) || price <= 0 || price > 10000000
       return;
     }
 
-    // The login story will populate this session key after authentication.
-    const idToken = typeof sessionStorage !== 'undefined'
-      ? sessionStorage.getItem('travelPriceMonitor.idToken')
-      : null;
-    if (!idToken) {
-      errorMessage = 'You need to sign in before creating a monitor. Authentication is not connected to this page yet.';
+    const localMode = env.PUBLIC_LOCAL_AUTH_DISABLED === 'true';
+    const idToken = localMode ? null : await getValidIdToken();
+    if (!localMode && !idToken) {
+      errorMessage = 'Please sign in above before creating a monitor. If your session expired, sign in again.';
       return;
     }
 
@@ -82,7 +120,7 @@ if (!rawTargetPrice || !Number.isFinite(price) || price <= 0 || price > 10000000
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': idToken
+          ...(idToken ? { Authorization: idToken } : {})
         },
         body: JSON.stringify({
           name: name.trim(),

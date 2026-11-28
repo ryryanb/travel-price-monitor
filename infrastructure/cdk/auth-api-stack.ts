@@ -11,7 +11,9 @@ import { fileURLToPath } from "node:url";
 export class AuthApiStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
-    const userPool = new cognito.UserPool(this, "UserPool", {
+    const localStackEndpoint = process.env.LOCALSTACK_ENDPOINT_URL || "";
+    const localMode = Boolean(localStackEndpoint) && process.env.LOCAL_AUTH_DISABLED === "true";
+    const userPool = localMode ? undefined : new cognito.UserPool(this, "UserPool", {
       userPoolName: "travel-price-monitor-users",
       signInAliases: { email: true },
       selfSignUpEnabled: true,
@@ -19,7 +21,7 @@ export class AuthApiStack extends cdk.Stack {
       passwordPolicy: { minLength: 8, requireLowercase: true, requireUppercase: true, requireDigits: true, requireSymbols: false },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
-    const userPoolClient = userPool.addClient("WebClient", {
+    const userPoolClient = userPool?.addClient("WebClient", {
       userPoolClientName: "travel-price-monitor-web-client",
       authFlows: { userPassword: true },
       preventUserExistenceErrors: true,
@@ -37,14 +39,12 @@ export class AuthApiStack extends cdk.Stack {
     // Set LOCALSTACK_ENDPOINT_URL when deploying locally (for example,
     // http://host.docker.internal:4566 on macOS). Lambda containers then
     // route Cognito and DynamoDB SDK calls back to LocalStack rather than AWS.
-    const localStackEndpoint = process.env.LOCALSTACK_ENDPOINT_URL || "";
-
     const common = {
       runtime: lambda.Runtime.NODEJS_22_X,
       timeout: cdk.Duration.seconds(15),
       memorySize: 256,
       environment: {
-        COGNITO_USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
+        COGNITO_USER_POOL_CLIENT_ID: userPoolClient?.userPoolClientId ?? "",
         COGNITO_REGION: cdk.Stack.of(this).region,
         COGNITO_ENDPOINT_URL: localStackEndpoint,
         WEB_ORIGIN: process.env.WEB_ORIGIN || "http://localhost:5173",
@@ -61,7 +61,7 @@ export class AuthApiStack extends cdk.Stack {
     const currentDirectory = path.dirname(currentFile);
     const repositoryRoot = path.resolve(currentDirectory, "../..");
 
-    const registerLambda = new nodejs.NodejsFunction(this, "RegisterLambda", {
+    const registerLambda = localMode ? undefined : new nodejs.NodejsFunction(this, "RegisterLambda", {
       ...common,
       entry: path.join(
         repositoryRoot,
@@ -71,7 +71,7 @@ export class AuthApiStack extends cdk.Stack {
       functionName: "travel-price-monitor-auth-register",
     });
 
-    const loginLambda = new nodejs.NodejsFunction(this, "LoginLambda", {
+    const loginLambda = localMode ? undefined : new nodejs.NodejsFunction(this, "LoginLambda", {
       ...common,
       entry: path.join(
         repositoryRoot,
@@ -81,7 +81,7 @@ export class AuthApiStack extends cdk.Stack {
       functionName: "travel-price-monitor-auth-login",
     });
 
-    const refreshLambda = new nodejs.NodejsFunction(this, "RefreshLambda", {
+    const refreshLambda = localMode ? undefined : new nodejs.NodejsFunction(this, "RefreshLambda", {
       ...common,
       entry: path.join(
         repositoryRoot,
@@ -100,6 +100,7 @@ export class AuthApiStack extends cdk.Stack {
       functionName: "travel-price-monitor-create-monitor",
       environment: {
         MONITORS_TABLE_NAME: monitorsTable.tableName,
+        LOCAL_AUTH_DISABLED: String(localMode),
         DYNAMODB_ENDPOINT_URL: localStackEndpoint,
         WEB_ORIGIN: process.env.WEB_ORIGIN || "http://localhost:5173",
       },
@@ -121,6 +122,7 @@ export class AuthApiStack extends cdk.Stack {
       functionName: "travel-price-monitor-get-monitor",
       environment: {
         MONITORS_TABLE_NAME: monitorsTable.tableName,
+        LOCAL_AUTH_DISABLED: String(localMode),
         DYNAMODB_ENDPOINT_URL: localStackEndpoint,
         WEB_ORIGIN: process.env.WEB_ORIGIN || "http://localhost:5173",
       },
@@ -149,7 +151,8 @@ export class AuthApiStack extends cdk.Stack {
         maxAge: cdk.Duration.hours(1),
       },
     });
-    const authorizer = new apigateway.CognitoUserPoolsAuthorizer(this, "ApiAuthorizer", { cognitoUserPools: [userPool] });
+    const authorizer = userPool ? new apigateway.CognitoUserPoolsAuthorizer(this, "ApiAuthorizer", { cognitoUserPools: [userPool] }) : undefined;
+    if (registerLambda && loginLambda && refreshLambda) {
     const auth = api.root.addResource("auth");
     auth
       .addResource("register")
@@ -161,13 +164,14 @@ export class AuthApiStack extends cdk.Stack {
       .addResource("refresh")
       .addMethod("POST", new apigateway.LambdaIntegration(refreshLambda));
 
+    }
     const monitors = api.root.addResource("monitors");
     monitors.addMethod(
       "POST",
       new apigateway.LambdaIntegration(createMonitorLambda),
       {
         authorizer,
-        authorizationType: apigateway.AuthorizationType.COGNITO_USER_POOLS,
+        authorizationType: localMode ? apigateway.AuthorizationType.NONE : apigateway.AuthorizationType.COGNITO_USER_POOLS,
       },
     );
     monitors.addResource("{monitorId}").addMethod(
@@ -175,15 +179,18 @@ export class AuthApiStack extends cdk.Stack {
       new apigateway.LambdaIntegration(getMonitorLambda),
       {
         authorizer,
-        authorizationType: apigateway.AuthorizationType.COGNITO_USER_POOLS,
+        authorizationType: localMode ? apigateway.AuthorizationType.NONE : apigateway.AuthorizationType.COGNITO_USER_POOLS,
       },
     );
 
+    if (userPool && userPoolClient) {
     new cdk.CfnOutput(this, "UserPoolId", { value: userPool.userPoolId });
     new cdk.CfnOutput(this, "UserPoolClientId", {
       value: userPoolClient.userPoolClientId,
     });
+    }
     new cdk.CfnOutput(this, "ApiBaseUrl", { value: api.urlForPath("/") });
+    if (!localMode) {
     new cdk.CfnOutput(this, "RegisterUrl", {
       value: api.urlForPath("/auth/register"),
     });
@@ -193,6 +200,7 @@ export class AuthApiStack extends cdk.Stack {
     new cdk.CfnOutput(this, "RefreshUrl", {
       value: api.urlForPath("/auth/refresh"),
     });
+    }
     new cdk.CfnOutput(this, "CreateMonitorUrl", {
       value: api.urlForPath("/monitors"),
     });
