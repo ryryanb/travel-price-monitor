@@ -37,7 +37,7 @@ export async function handleCreateMonitor(
   }
 
   const claims = event.requestContext?.authorizer?.claims ?? event.requestContext?.authorizer?.jwt?.claims;
-  const userId = typeof claims?.sub === "string" ? claims.sub : "";
+  const userId = env.LOCAL_AUTH_DISABLED === "true" ? "local-dev-user" : typeof claims?.sub === "string" ? claims.sub : "";
   if (!userId) return response(401, { message: "Authentication is required." });
 
   // Validate all user-provided criteria before initializing storage or attempting persistence.
