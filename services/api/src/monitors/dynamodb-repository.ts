@@ -91,7 +91,7 @@ export function createDynamoDbMonitorRepository(tableName: string): MonitorRepos
       const monitor = readMonitor(result.Item);
       if (monitor.userId !== userId) throw new Error("Stored monitor owner is invalid.");
       return monitor;
-    },,
+    },
     
     async listByUser(userId: string): Promise<PriceMonitor[]> {
       const monitors: PriceMonitor[] = [];
