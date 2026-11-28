@@ -4,6 +4,12 @@ import { handleGetMonitor } from "../services/api/src/handlers/monitors/get.ts";
 import type { MonitorReaderRepository, PriceMonitor } from "../services/api/src/monitors/types.ts";
 
 const originalTableName = process.env.MONITORS_TABLE_NAME;
+const originalLocalAuthDisabled = process.env.LOCAL_AUTH_DISABLED;
+
+test.beforeEach(() => {
+  // Keep authenticated tests independent of the developer shell's local mode.
+  process.env.LOCAL_AUTH_DISABLED = "false";
+});
 const monitor: PriceMonitor = {
   monitorId: "monitor-123",
   userId: "user-123",
@@ -24,6 +30,8 @@ const authenticated = { requestContext: { authorizer: { claims: { sub: "user-123
 test.afterEach(() => {
   if (originalTableName === undefined) delete process.env.MONITORS_TABLE_NAME;
   else process.env.MONITORS_TABLE_NAME = originalTableName;
+  if (originalLocalAuthDisabled === undefined) delete process.env.LOCAL_AUTH_DISABLED;
+  else process.env.LOCAL_AUTH_DISABLED = originalLocalAuthDisabled;
 });
 
 test("returns monitor details for its authenticated owner", async () => {
@@ -90,4 +98,16 @@ test("returns a generic error when storage fails", async () => {
   }, () => ({ async getById() { throw new Error("sensitive database detail"); } }));
   assert.equal(response.statusCode, 502);
   assert.equal(response.body.includes("sensitive database detail"), false);
+});
+
+test("retrieves monitors for the fixed local user when authentication is disabled", async () => {
+  process.env.LOCAL_AUTH_DISABLED = "true";
+  process.env.MONITORS_TABLE_NAME = "monitors";
+  let requestedUser = "";
+  const response = await handleGetMonitor(
+    { pathParameters: { monitorId: "monitor-123" } },
+    () => ({ async getById(userId) { requestedUser = userId; return { ...monitor, userId }; } }),
+  );
+  assert.equal(response.statusCode, 200);
+  assert.equal(requestedUser, "local-dev-user");
 });
