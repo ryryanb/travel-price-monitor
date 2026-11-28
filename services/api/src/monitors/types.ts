@@ -34,3 +34,7 @@ export interface MonitorRepository {
 export interface MonitorReaderRepository {
   getById(userId: string, monitorId: string): Promise<PriceMonitor | undefined>;
 }
+
+export interface MonitorListRepository {
+  listByUser(userId: string): Promise<PriceMonitor[]>;
+}
